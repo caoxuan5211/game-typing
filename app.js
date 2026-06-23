@@ -372,5 +372,9 @@ function hideModal() {
     resultModal.classList.remove('show');
 }
 
-// 启动应用
-init();
+// 启动应用 - 等待DOM完全加载
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
