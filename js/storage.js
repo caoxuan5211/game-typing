@@ -35,7 +35,17 @@ export function getDefaultStore() {
         history: [],
         customText: '',
         theme: 'dark',
-        sound: true
+        sound: true,
+
+        // 成就系统
+        totalXP: 0,
+        level: 1,
+        earnedBadges: [],
+        maxCharsInSession: 0,
+        bestCombo: 0,
+        hasGradeS: false,
+        modesCompleted: 0,
+        modesPlayed: []
     };
 }
 

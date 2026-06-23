@@ -1,5 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
+import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
 
 // 代码片段数据
 const snippets = {
@@ -142,7 +143,11 @@ const dom = {
     saveCustom: document.getElementById('saveCustom'),
     cancelCustom: document.getElementById('cancelCustom'),
     closeModal: document.getElementById('closeModal'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    levelBadge: document.getElementById('levelBadge'),
+    levelTitle: document.getElementById('levelTitle'),
+    xpFill: document.getElementById('xpFill'),
+    xpText: document.getElementById('xpText')
 };
 
 // 初始化
@@ -424,10 +429,52 @@ function completeRound() {
         store.todayChars = 0;
     }
 
+    const oldLevel = getCurrentLevel(store.totalXP);
+
     store.totalRuns += 1;
     store.bestWpm = Math.max(store.bestWpm, result.wpm);
     store.bestAccuracy = Math.max(store.bestAccuracy, result.accuracy);
     store.todayChars += state.target.length;
+    store.bestCombo = Math.max(store.bestCombo, state.bestCombo);
+    store.maxCharsInSession = Math.max(store.maxCharsInSession, state.target.length);
+
+    // 记录评分
+    if (result.grade === 'S') {
+        store.hasGradeS = true;
+    }
+
+    // 记录模式
+    if (!store.modesPlayed) store.modesPlayed = [];
+    if (!store.modesPlayed.includes(state.mode)) {
+        store.modesPlayed.push(state.mode);
+        store.modesCompleted = store.modesPlayed.length;
+    }
+
+    // 计算经验值
+    const xpGained = calculateXP(result.wpm, result.accuracy, state.target.length);
+    store.totalXP = (store.totalXP || 0) + xpGained;
+
+    const newLevel = getCurrentLevel(store.totalXP);
+    const leveledUp = newLevel.level > oldLevel.level;
+
+    // 检查新徽章
+    const newBadges = checkNewBadges({
+        totalRuns: store.totalRuns,
+        bestWpm: store.bestWpm,
+        bestAccuracy: store.bestAccuracy,
+        maxCharsInSession: store.maxCharsInSession,
+        bestCombo: store.bestCombo,
+        dayStreak: store.dayStreak,
+        hasGradeS: store.hasGradeS,
+        modesCompleted: store.modesCompleted
+    }, store.earnedBadges || []);
+
+    if (newBadges.length > 0) {
+        if (!store.earnedBadges) store.earnedBadges = [];
+        newBadges.forEach(badge => {
+            store.earnedBadges.push(badge.id);
+        });
+    }
 
     updateDayStreak(store, now);
 
@@ -438,6 +485,7 @@ function completeRound() {
         mode: state.mode,
         chars: state.target.length,
         grade: result.grade,
+        xp: xpGained,
         createdAt: now
     });
     store.history = store.history.slice(0, 20);
@@ -445,7 +493,19 @@ function completeRound() {
     saveStore(store);
 
     audioSystem.playComplete();
-    showToast(`完成！${result.wpm} WPM，准确率 ${result.accuracy}%`);
+
+    // 显示成就通知
+    if (leveledUp) {
+        showLevelUpNotification(newLevel);
+    }
+
+    if (newBadges.length > 0) {
+        setTimeout(() => {
+            showBadgeNotification(newBadges[0]);
+        }, leveledUp ? 2000 : 0);
+    }
+
+    showToast(`完成！${result.wpm} WPM，准确率 ${result.accuracy}% (+${xpGained} XP)`);
     renderAll();
 }
 
@@ -491,6 +551,7 @@ function handleInput(event) {
                 // 连击里程碑
                 if (state.combo === 10 || state.combo === 25 || state.combo === 50 || state.combo === 100) {
                     audioSystem.playComboMilestone(Math.floor(state.combo / 10));
+                    showComboEffect(state.combo);
                 }
             } else {
                 state.errors += 1;
@@ -576,12 +637,34 @@ function stopTimer() {
 // 渲染
 function renderAll() {
     const stats = getStats();
+    renderLevel();
     renderStatus();
     renderStats(stats);
     renderProgress(stats);
     renderCode();
     renderMeta();
     renderButtons();
+}
+
+function renderLevel() {
+    const currentLevel = getCurrentLevel(store.totalXP || 0);
+    const nextLevelXP = getNextLevelXP(currentLevel);
+
+    dom.levelBadge.textContent = `Lv.${currentLevel.level}`;
+    dom.levelTitle.textContent = currentLevel.title;
+
+    if (nextLevelXP) {
+        const currentXP = store.totalXP || 0;
+        const xpInLevel = currentXP - currentLevel.xp;
+        const xpNeeded = nextLevelXP - currentLevel.xp;
+        const percentage = Math.min(100, (xpInLevel / xpNeeded) * 100);
+
+        dom.xpFill.style.width = `${percentage}%`;
+        dom.xpText.textContent = `${xpInLevel} / ${xpNeeded} XP`;
+    } else {
+        dom.xpFill.style.width = '100%';
+        dom.xpText.textContent = '已达到最高等级';
+    }
 }
 
 function renderStatus() {
@@ -676,6 +759,61 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+// 显示连击特效
+function showComboEffect(combo) {
+    const effect = document.createElement('div');
+    effect.className = 'combo-effect';
+    effect.textContent = `${combo} COMBO!`;
+    document.body.appendChild(effect);
+
+    setTimeout(() => effect.remove(), 800);
+}
+
+// 显示升级通知
+function showLevelUpNotification(newLevel) {
+    const notification = document.createElement('div');
+    notification.className = 'level-up-notification';
+    notification.innerHTML = `
+        <div class="level-up-content">
+            <div class="level-up-icon">🎉</div>
+            <div class="level-up-text">
+                <div class="level-up-title">升级了！</div>
+                <div class="level-up-level">Lv.${newLevel.level} ${newLevel.title}</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.classList.add('show'), 100);
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+
+// 显示徽章通知
+function showBadgeNotification(badge) {
+    const notification = document.createElement('div');
+    notification.className = 'badge-notification';
+    notification.innerHTML = `
+        <div class="badge-content">
+            <div class="badge-icon">${badge.icon}</div>
+            <div class="badge-text">
+                <div class="badge-title">解锁成就！</div>
+                <div class="badge-name">${badge.name}</div>
+                <div class="badge-desc">${badge.desc}</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.classList.add('show'), 100);
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 500);
+    }, 3500);
 }
 
 // 页面加载完成后初始化
