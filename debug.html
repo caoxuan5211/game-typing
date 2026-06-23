@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试诊断</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+        .test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .log {
+            background: #000;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #0f0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #0ff; }
+    </style>
+</head>
+<body>
+    <h1>游戏功能诊断</h1>
+
+    <div class="test">
+        <h2>1. 测试Enter键</h2>
+        <button id="testBtn1">开始按钮</button>
+        <div class="log" id="log1"></div>
+    </div>
+
+    <div class="test">
+        <h2>2. 测试主题按钮</h2>
+        <button class="theme-btn" data-theme="purple">紫罗兰</button>
+        <button class="theme-btn" data-theme="sakura">米粉色</button>
+        <div class="log" id="log2"></div>
+    </div>
+
+    <div class="test">
+        <h2>3. 测试Alt+R</h2>
+        <button id="resetBtn">重置按钮</button>
+        <div class="log" id="log3"></div>
+    </div>
+
+    <div class="test">
+        <h2>4. 检查模块加载</h2>
+        <button id="checkModules">检查模块</button>
+        <div class="log" id="log4"></div>
+    </div>
+
+    <script type="module">
+        const log = (id, msg, type = 'info') => {
+            const logEl = document.getElementById(id);
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `<div class="${type}">[${time}] ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        // 测试1: Enter键
+        document.getElementById('testBtn1').addEventListener('click', () => {
+            log('log1', '✅ 按钮被点击了', 'success');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                log('log1', `🔵 Enter键被按下 (target: ${e.target.tagName})`, 'info');
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    log('log1', '🔵 触发按钮点击', 'info');
+                    document.getElementById('testBtn1').click();
+                }
+            }
+        });
+
+        // 测试2: 主题按钮
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            log('log2', `找到主题按钮: ${btn.dataset.theme}`, 'success');
+            btn.addEventListener('click', (e) => {
+                const theme = e.currentTarget.dataset.theme;
+                log('log2', `✅ 主题按钮被点击: ${theme}`, 'success');
+            });
+        });
+
+        // 测试3: Alt+R
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            log('log3', '✅ 重置按钮被点击', 'success');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.key === 'r') {
+                e.preventDefault();
+                log('log3', '🔵 Alt+R被按下，触发重置', 'info');
+                document.getElementById('resetBtn').click();
+            }
+        });
+
+        // 测试4: 检查模块
+        document.getElementById('checkModules').addEventListener('click', async () => {
+            log('log4', '开始检查...', 'info');
+
+            try {
+                const response = await fetch('./src/js/game.js');
+                log('log4', `✅ game.js 可访问 (${response.status})`, 'success');
+            } catch (e) {
+                log('log4', `❌ game.js 无法访问: ${e.message}`, 'error');
+            }
+
+            try {
+                const response = await fetch('./src/js/modal.js');
+                log('log4', `✅ modal.js 可访问 (${response.status})`, 'success');
+            } catch (e) {
+                log('log4', `❌ modal.js 无法访问: ${e.message}`, 'error');
+            }
+
+            // 检查实际游戏页面
+            try {
+                const response = await fetch('./index.html');
+                const html = await response.text();
+                const hasStartBtn = html.includes('id="startBtn"');
+                const hasThemeBtn = html.includes('data-theme="sakura"');
+                log('log4', `✅ index.html 可访问`, 'success');
+                log('log4', `开始按钮: ${hasStartBtn ? '✅' : '❌'}`, hasStartBtn ? 'success' : 'error');
+                log('log4', `sakura按钮: ${hasThemeBtn ? '✅' : '❌'}`, hasThemeBtn ? 'success' : 'error');
+            } catch (e) {
+                log('log4', `❌ index.html 无法访问: ${e.message}`, 'error');
+            }
+        });
+
+        log('log1', '准备就绪，按Enter键测试', 'info');
+        log('log2', '点击主题按钮测试', 'info');
+        log('log3', '按Alt+R测试', 'info');
+        log('log4', '点击"检查模块"按钮', 'info');
+    </script>
+</body>
+</html>
