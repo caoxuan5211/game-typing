@@ -1,0 +1,23 @@
+{
+  "name": "code-typing-game",
+  "version": "1.0.0",
+  "description": "专业的代码打字练习工具",
+  "type": "module",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Build complete'",
+    "deploy": "bash deploy.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caoxuan5211/game-typing.git"
+  },
+  "keywords": [
+    "typing",
+    "code",
+    "practice",
+    "game"
+  ],
+  "author": "caoxuan5211",
+  "license": "MIT"
+}

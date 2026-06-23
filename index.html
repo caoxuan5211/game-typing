@@ -3,61 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Code Typing - 专业的代码打字练习工具，提升你的编程速度和准确性">
+    <meta name="keywords" content="打字练习,代码打字,编程练习,typing game">
+    <meta name="author" content="Code Typing">
     <title>Code Typing - 代码打字练习</title>
-    <link rel="stylesheet" href="style.css?v=001">
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="src/css/main.css">
+    <link rel="stylesheet" href="src/css/components.css">
+    <link rel="stylesheet" href="src/css/animations.css">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <!-- Main Container -->
     <div class="container">
-        <h1>Code Typing</h1>
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">Code Typing</h1>
+            <p class="subtitle">提升你的代码输入速度</p>
+        </header>
 
+        <!-- Settings Bar -->
+        <div class="settings-bar">
+            <div class="settings-group">
+                <button class="icon-btn" id="themeToggle" title="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <label class="switch" title="音效开关">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="slider"></span>
+                </label>
+                <button class="icon-btn" id="statsBtn" title="查看统计">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Selector -->
         <div class="mode-selector">
-            <button class="mode-btn active" data-mode="code">代码片段</button>
-            <button class="mode-btn" data-mode="symbols">符号练习</button>
-            <button class="mode-btn" data-mode="mixed">混合模式</button>
+            <button class="mode-btn active" data-mode="code" title="代码片段练习">
+                <span class="mode-icon">💻</span>
+                <span class="mode-label">代码片段</span>
+            </button>
+            <button class="mode-btn" data-mode="symbols" title="符号练习">
+                <span class="mode-icon">⚡</span>
+                <span class="mode-label">符号练习</span>
+            </button>
+            <button class="mode-btn" data-mode="mixed" title="混合模式">
+                <span class="mode-icon">🎯</span>
+                <span class="mode-label">混合模式</span>
+            </button>
+            <button class="mode-btn" data-mode="custom" title="自定义文本" id="customModeBtn">
+                <span class="mode-icon">✏️</span>
+                <span class="mode-label">自定义</span>
+            </button>
         </div>
 
+        <!-- Difficulty Selector -->
+        <div class="difficulty-selector">
+            <button class="difficulty-btn" data-difficulty="easy">简单</button>
+            <button class="difficulty-btn active" data-difficulty="medium">中等</button>
+            <button class="difficulty-btn" data-difficulty="hard">困难</button>
+        </div>
+
+        <!-- Stats Display -->
         <div class="stats">
-            <div class="stat">
-                <span class="label">时间</span>
-                <span class="value" id="timer">0s</span>
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-content">
+                    <span class="stat-label">时间</span>
+                    <span class="stat-value" id="timer">0s</span>
+                </div>
             </div>
-            <div class="stat">
-                <span class="label">速度</span>
-                <span class="value" id="wpm">0 WPM</span>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-content">
+                    <span class="stat-label">速度</span>
+                    <span class="stat-value" id="wpm">0 WPM</span>
+                </div>
             </div>
-            <div class="stat">
-                <span class="label">正确率</span>
-                <span class="value" id="accuracy">100%</span>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <span class="stat-label">正确率</span>
+                    <span class="stat-value" id="accuracy">100%</span>
+                </div>
             </div>
         </div>
 
-        <div class="code-display" id="codeDisplay"></div>
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
 
+        <!-- Code Display -->
+        <div class="code-display-wrapper">
+            <div class="code-display" id="codeDisplay"></div>
+        </div>
+
+        <!-- Input Area -->
         <textarea
             id="input"
+            class="input-area"
             placeholder="点击开始按钮后开始输入..."
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
             disabled
         ></textarea>
 
+        <!-- Controls -->
         <div class="controls">
-            <button id="startBtn" class="btn primary">开始练习</button>
-            <button id="resetBtn" class="btn">重置</button>
+            <button id="startBtn" class="btn btn-primary">
+                <span class="btn-icon">▶️</span>
+                <span class="btn-text">开始练习</span>
+            </button>
+            <button id="resetBtn" class="btn btn-secondary">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">重置</span>
+            </button>
         </div>
 
-        <div class="version">v0.0.1</div>
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="version">v1.0.0</div>
+            <div class="links">
+                <a href="https://github.com/caoxuan5211/game-typing" target="_blank" rel="noopener">GitHub</a>
+                <span class="separator">•</span>
+                <a href="#" id="aboutLink">关于</a>
+            </div>
+        </footer>
     </div>
 
+    <!-- Complete Modal -->
     <div class="modal" id="modal">
+        <div class="modal-overlay"></div>
         <div class="modal-content">
-            <h2>完成！</h2>
-            <p>速度: <strong id="finalWpm">0</strong> WPM</p>
-            <p>正确率: <strong id="finalAccuracy">100</strong>%</p>
-            <p>用时: <strong id="finalTime">0</strong>秒</p>
-            <button id="restartBtn" class="btn primary">再来一次</button>
+            <div class="modal-header">
+                <h2 class="modal-title">🎉 完成！</h2>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-label">速度</div>
+                        <div class="result-value primary">
+                            <strong id="finalWpm">0</strong>
+                            <span class="unit">WPM</span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">正确率</div>
+                        <div class="result-value">
+                            <strong id="finalAccuracy">100</strong>
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">用时</div>
+                        <div class="result-value">
+                            <strong id="finalTime">0</strong>
+                            <span class="unit">秒</span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">字符/分钟</div>
+                        <div class="result-value">
+                            <strong id="finalCpm">0</strong>
+                            <span class="unit">CPM</span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">稳定性</div>
+                        <div class="result-value">
+                            <strong id="finalConsistency">100</strong>
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">修正次数</div>
+                        <div class="result-value">
+                            <strong id="finalCorrections">0</strong>
+                            <span class="unit">次</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="restartBtn" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">再来一次</span>
+                </button>
+            </div>
         </div>
     </div>
 
-    <script src="data.js?v=001"></script>
-    <script src="app.js?v=001"></script>
+    <!-- Theme Selector Modal -->
+    <div class="modal" id="themeModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 class="modal-title">选择主题</h2>
+                <button class="modal-close" id="themeModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="theme-grid">
+                    <button class="theme-btn active" data-theme="purple">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+                        <div class="theme-name">紫罗兰</div>
+                    </button>
+                    <button class="theme-btn" data-theme="ocean">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"></div>
+                        <div class="theme-name">海洋蓝</div>
+                    </button>
+                    <button class="theme-btn" data-theme="sunset">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)"></div>
+                        <div class="theme-name">日落橙</div>
+                    </button>
+                    <button class="theme-btn" data-theme="forest">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%)"></div>
+                        <div class="theme-name">森林绿</div>
+                    </button>
+                    <button class="theme-btn" data-theme="midnight">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%)"></div>
+                        <div class="theme-name">午夜黑</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="statsModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 class="modal-title">📊 统计数据</h2>
+                <button class="modal-close" id="statsModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="statsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Text Modal -->
+    <div class="modal" id="customTextModal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ 自定义文本</h2>
+                <button class="modal-close" id="customTextModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="customTextInput" class="custom-text-input" placeholder="在这里输入你想练习的文本..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="saveCustomTextBtn" class="btn btn-primary">保存并开始</button>
+                <button id="cancelCustomTextBtn" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="src/js/main.js"></script>
 </body>
 </html>
