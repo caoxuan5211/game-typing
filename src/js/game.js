@@ -247,6 +247,26 @@ export class TypingGame {
     handleKeydown(event) {
         if (!this.isPlaying || this.isPaused) return;
 
+        // 处理Tab键 - 插入制表符而不是失去焦点
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            const input = this.elements.input;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+
+            // 插入Tab字符
+            const value = input.value;
+            input.value = value.substring(0, start) + '\t' + value.substring(end);
+
+            // 设置光标位置
+            input.selectionStart = input.selectionEnd = start + 1;
+
+            // 触发input事件
+            const inputEvent = new Event('input', { bubbles: true });
+            input.dispatchEvent(inputEvent);
+            return;
+        }
+
         // 禁止 Ctrl/Cmd + A/C/V/X 等组合键
         if ((event.ctrlKey || event.metaKey) && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
             if (event.key.toLowerCase() !== 'a') {
