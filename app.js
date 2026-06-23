@@ -38,29 +38,24 @@ function setupEventListeners() {
     textInput.addEventListener('input', handleInput);
     textInput.addEventListener('paste', (e) => e.preventDefault());
 
-    // 处理Tab键 - 插入缩进而不是切换焦点
-    textInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
+    // ✅ 全局拦截Tab键 - 捕获阶段（最高优先级）
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab' && document.activeElement === textInput) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
 
             const start = textInput.selectionStart;
             const end = textInput.selectionEnd;
             const value = textInput.value;
-
-            // 插入4个空格作为缩进
             const indent = '    ';
+
             textInput.value = value.substring(0, start) + indent + value.substring(end);
-
-            // 将光标移到插入的缩进后面
             textInput.selectionStart = textInput.selectionEnd = start + indent.length;
-
-            // 触发input事件以更新显示
             textInput.dispatchEvent(new Event('input'));
-
             return false;
         }
-    });
+    }, true);  // 👈 true = 捕获阶段，最早触发
 
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', restart);
