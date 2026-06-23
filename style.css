@@ -23,18 +23,59 @@ body {
 /* 头部 */
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
+    padding-top: 20px;
 }
 
 header h1 {
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 12px;
+    font-size: 4rem;
+    font-weight: 900;
+    margin-bottom: 0;
+    letter-spacing: 0.05em;
 }
 
-header h1 .highlight {
-    color: #667eea;
+.title-animated {
+    display: inline-block;
+}
+
+.title-animated .letter {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+    color: #1a202c;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.title-animated .letter.highlight {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+}
+
+.title-animated .space {
+    display: inline-block;
+    width: 0.3em;
+}
+
+.title-animated .letter:nth-child(1) { animation-delay: 0s; }
+.title-animated .letter:nth-child(2) { animation-delay: 0.1s; }
+.title-animated .letter:nth-child(3) { animation-delay: 0.2s; }
+.title-animated .letter:nth-child(4) { animation-delay: 0.3s; }
+.title-animated .letter:nth-child(6) { animation-delay: 0.4s; }
+.title-animated .letter:nth-child(7) { animation-delay: 0.5s; }
+.title-animated .letter:nth-child(8) { animation-delay: 0.6s; }
+.title-animated .letter:nth-child(9) { animation-delay: 0.7s; }
+.title-animated .letter:nth-child(10) { animation-delay: 0.8s; }
+.title-animated .letter:nth-child(11) { animation-delay: 0.9s; }
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 .subtitle {
@@ -428,5 +469,14 @@ header h1 .highlight {
 
     .btn {
         width: 100%;
+    }
+
+    .mode-selector {
+        gap: 8px;
+    }
+
+    .mode-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
     }
 }
