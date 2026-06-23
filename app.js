@@ -42,6 +42,7 @@ function setupEventListeners() {
     textInput.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
+            e.stopPropagation();
 
             const start = textInput.selectionStart;
             const end = textInput.selectionEnd;
@@ -56,6 +57,8 @@ function setupEventListeners() {
 
             // 触发input事件以更新显示
             textInput.dispatchEvent(new Event('input'));
+
+            return false;
         }
     });
 
