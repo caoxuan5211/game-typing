@@ -1,380 +1,158 @@
 // 游戏状态
-let currentMode = 'code';
+let mode = 'code';
 let currentText = '';
-let currentIndex = 0;
 let startTime = null;
-let timerInterval = null;
-let totalChars = 0;
-let correctChars = 0;
-let errorChars = 0;
-let isGameActive = false;
-let isGameStarted = false;
+let timer = null;
+let isStarted = false;
 
-// DOM 元素
+// DOM元素
 const codeDisplay = document.getElementById('codeDisplay');
-const textInput = document.getElementById('textInput');
-const wpmValue = document.getElementById('wpm-value');
-const accuracyDisplay = document.getElementById('accuracy');
-const timerDisplay = document.getElementById('timer');
-const correctCountDisplay = document.getElementById('correct-count');
-const errorCountDisplay = document.getElementById('error-count');
-const progressText = document.getElementById('progress-text');
-const progressFill = document.getElementById('progress-fill');
+const input = document.getElementById('input');
+const timerEl = document.getElementById('timer');
+const wpmEl = document.getElementById('wpm');
+const accuracyEl = document.getElementById('accuracy');
 const startBtn = document.getElementById('startBtn');
+const resetBtn = document.getElementById('resetBtn');
+const modal = document.getElementById('modal');
 const restartBtn = document.getElementById('restartBtn');
-const resultModal = document.getElementById('resultModal');
-const modalRestartBtn = document.getElementById('modalRestartBtn');
-const modalNextBtn = document.getElementById('modalNextBtn');
 const modeBtns = document.querySelectorAll('.mode-btn');
 
 // 初始化
 function init() {
-    loadNewText();
-    setupEventListeners();
+    loadText();
+    setupEvents();
 }
 
-// 设置事件监听
-function setupEventListeners() {
-    textInput.addEventListener('input', handleInput);
-    textInput.addEventListener('paste', (e) => e.preventDefault());
+// 加载文本
+function loadText() {
+    let pool = codeSnippets;
+    if (mode === 'symbols') pool = symbolPractice;
+    if (mode === 'mixed') pool = mixedContent;
 
-    // ✅ 全局拦截Tab键 - 捕获阶段（最高优先级）
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab' && document.activeElement === textInput) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+    currentText = pool[Math.floor(Math.random() * pool.length)];
+    renderText();
+}
 
-            const start = textInput.selectionStart;
-            const end = textInput.selectionEnd;
-            const value = textInput.value;
-            const indent = '    ';
+// 渲染文本
+function renderText() {
+    const inputValue = input.value;
+    let html = '';
 
-            textInput.value = value.substring(0, start) + indent + value.substring(end);
-            textInput.selectionStart = textInput.selectionEnd = start + indent.length;
-            textInput.dispatchEvent(new Event('input'));
-            return false;
+    for (let i = 0; i < currentText.length; i++) {
+        const char = currentText[i];
+        let className = '';
+
+        if (i < inputValue.length) {
+            className = inputValue[i] === char ? 'correct' : 'incorrect';
+        } else if (i === inputValue.length) {
+            className = 'current';
         }
-    }, true);  // 👈 true = 捕获阶段，最早触发
 
-    startBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', restart);
+        html += `<span class="${className}">${char === ' ' ? '&nbsp;' : char}</span>`;
+    }
 
-    modalRestartBtn.addEventListener('click', () => {
-        hideModal();
-        restart();
+    codeDisplay.innerHTML = html;
+}
+
+// 更新统计
+function updateStats() {
+    const inputValue = input.value;
+    let correct = 0;
+
+    for (let i = 0; i < inputValue.length; i++) {
+        if (inputValue[i] === currentText[i]) correct++;
+    }
+
+    const accuracy = inputValue.length ? Math.round((correct / inputValue.length) * 100) : 100;
+    accuracyEl.textContent = accuracy + '%';
+
+    if (startTime) {
+        const elapsed = (Date.now() - startTime) / 1000 / 60;
+        const wpm = Math.round((correct / 5) / elapsed) || 0;
+        wpmEl.textContent = wpm + ' WPM';
+    }
+}
+
+// 检查完成
+function checkComplete() {
+    if (input.value === currentText) {
+        finish();
+    }
+}
+
+// 完成
+function finish() {
+    clearInterval(timer);
+    input.disabled = true;
+
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById('finalTime').textContent = elapsed;
+    document.getElementById('finalWpm').textContent = wpmEl.textContent.replace(' WPM', '');
+    document.getElementById('finalAccuracy').textContent = accuracyEl.textContent.replace('%', '');
+
+    modal.classList.add('show');
+}
+
+// 开始
+function start() {
+    if (isStarted) return;
+
+    isStarted = true;
+    startTime = Date.now();
+    input.disabled = false;
+    input.focus();
+    startBtn.textContent = '进行中...';
+    startBtn.disabled = true;
+
+    timer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        timerEl.textContent = elapsed + 's';
+    }, 100);
+}
+
+// 重置
+function reset() {
+    clearInterval(timer);
+    isStarted = false;
+    startTime = null;
+    input.value = '';
+    input.disabled = true;
+    startBtn.textContent = '开始练习';
+    startBtn.disabled = false;
+    timerEl.textContent = '0s';
+    wpmEl.textContent = '0 WPM';
+    accuracyEl.textContent = '100%';
+    modal.classList.remove('show');
+    loadText();
+}
+
+// 设置事件
+function setupEvents() {
+    startBtn.addEventListener('click', start);
+    resetBtn.addEventListener('click', reset);
+    restartBtn.addEventListener('click', reset);
+
+    input.addEventListener('input', () => {
+        renderText();
+        updateStats();
+        checkComplete();
     });
 
-    modalNextBtn.addEventListener('click', () => {
-        hideModal();
-        loadNewText();
-    });
+    input.addEventListener('paste', e => e.preventDefault());
 
     modeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             modeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            currentMode = btn.dataset.mode;
-            loadNewText();
+            mode = btn.dataset.mode;
+            reset();
         });
     });
 
-    // 键盘快捷键
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !isGameStarted && document.activeElement !== textInput) {
-            e.preventDefault();
-            startGame();
-        }
-        if (e.key === 'r' && !isGameActive) {
-            e.preventDefault();
-            restart();
-        }
-        if (e.key === 'Escape' && resultModal.classList.contains('show')) {
-            hideModal();
-        }
-    });
-
-    // 点击模态框外部关闭
-    resultModal.addEventListener('click', (e) => {
-        if (e.target === resultModal) {
-            hideModal();
-        }
+    modal.addEventListener('click', e => {
+        if (e.target === modal) modal.classList.remove('show');
     });
 }
 
-// 加载新文本
-function loadNewText() {
-    let textPool;
-    switch(currentMode) {
-        case 'code':
-            textPool = codeSnippets;
-            break;
-        case 'symbols':
-            textPool = symbolPractice;
-            break;
-        case 'mixed':
-            textPool = mixedContent;
-            break;
-        default:
-            textPool = codeSnippets;
-    }
-
-    const randomIndex = Math.floor(Math.random() * textPool.length);
-    currentText = textPool[randomIndex];
-
-    restart();
-}
-
-// 音效系统
-const soundEnabled = true;
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-function playKeySound(isCorrect) {
-    if (!soundEnabled) return;
-
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // 正确按键：清脆的声音
-    if (isCorrect) {
-        oscillator.frequency.value = 800;
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-    } else {
-        // 错误按键：低沉的声音
-        oscillator.frequency.value = 200;
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    }
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-}
-
-function playCompleteSound() {
-    if (!soundEnabled) return;
-
-    const times = [0, 0.1, 0.2];
-    const frequencies = [523.25, 659.25, 783.99]; // C, E, G
-
-    times.forEach((time, i) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.value = frequencies[i];
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.2);
-
-        oscillator.start(audioContext.currentTime + time);
-        oscillator.stop(audioContext.currentTime + time + 0.2);
-    });
-}
-
-// 重新开始
-function restart() {
-    currentIndex = 0;
-    totalChars = 0;
-    correctChars = 0;
-    errorChars = 0;
-    startTime = null;
-    isGameActive = false;
-    isGameStarted = false;
-
-    textInput.value = '';
-    textInput.disabled = false;  // 修改：默认启用输入框
-    textInput.focus();
-    startBtn.textContent = '▶️ 开始 (Enter)';
-    startBtn.style.display = 'inline-flex';
-
-    clearInterval(timerInterval);
-    timerDisplay.textContent = '0s';
-    wpmValue.textContent = '0';
-    accuracyDisplay.textContent = '100%';
-    correctCountDisplay.textContent = '0';
-    errorCountDisplay.textContent = '0';
-    progressText.textContent = `0 / ${currentText.length}`;
-    progressFill.style.width = '0%';
-
-    renderText();
-}
-
-// 开始游戏
-function startGame() {
-    if (isGameStarted) return;
-
-    isGameStarted = true;
-    isGameActive = true;
-    startTime = Date.now();
-    textInput.disabled = false;
-    textInput.focus();
-    startBtn.style.display = 'none';
-
-    timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        timerDisplay.textContent = `${elapsed}s`;
-    }, 100);
-}
-
-// 渲染文本显示
-function renderText() {
-    codeDisplay.innerHTML = '';
-
-    const lines = currentText.split('\n');
-
-    lines.forEach((line, lineIndex) => {
-        const lineDiv = document.createElement('div');
-        lineDiv.className = 'code-line';
-
-        const lineNumber = document.createElement('span');
-        lineNumber.className = 'line-number';
-        lineNumber.textContent = lineIndex + 1;
-
-        const lineContent = document.createElement('span');
-        lineContent.className = 'line-content';
-
-        let charOffset = lines.slice(0, lineIndex).reduce((sum, l) => sum + l.length + 1, 0);
-
-        for (let i = 0; i < line.length; i++) {
-            const globalIndex = charOffset + i;
-            const char = line[i];
-            const span = document.createElement('span');
-
-            if (char === ' ') {
-                span.innerHTML = '&nbsp;';
-            } else {
-                span.textContent = char;
-            }
-
-            if (globalIndex < currentIndex) {
-                const inputChar = textInput.value[globalIndex];
-                if (inputChar === char) {
-                    span.classList.add('char-correct');
-                } else {
-                    span.classList.add('char-incorrect');
-                }
-            } else if (globalIndex === currentIndex) {
-                span.classList.add('char-current');
-            }
-
-            lineContent.appendChild(span);
-        }
-
-        lineDiv.appendChild(lineNumber);
-        lineDiv.appendChild(lineContent);
-        codeDisplay.appendChild(lineDiv);
-    });
-}
-
-// 处理输入
-function handleInput(e) {
-    // 如果还没开始游戏，自动开始
-    if (!isGameActive && !isGameStarted) {
-        startGame();
-    }
-
-    if (!isGameActive) return;
-
-    const inputValue = textInput.value;
-    const newIndex = inputValue.length;
-
-    // 播放音效（只在新字符输入时）
-    if (newIndex > currentIndex) {
-        const lastChar = inputValue[newIndex - 1];
-        const expectedChar = currentText[newIndex - 1];
-        playKeySound(lastChar === expectedChar);
-    }
-
-    currentIndex = newIndex;
-
-    // 计算统计数据
-    totalChars = currentIndex;
-    correctChars = 0;
-    errorChars = 0;
-
-    for (let i = 0; i < currentIndex; i++) {
-        if (inputValue[i] === currentText[i]) {
-            correctChars++;
-        } else {
-            errorChars++;
-        }
-    }
-
-    renderText();
-    updateStats();
-
-    // 检查是否完成
-    if (currentIndex >= currentText.length && inputValue === currentText) {
-        endGame();
-    }
-}
-
-// 更新统计
-function updateStats() {
-    // 计算 WPM
-    if (startTime) {
-        const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
-        const words = correctChars / 5;
-        const wpm = Math.round(words / elapsedMinutes) || 0;
-        wpmValue.textContent = wpm;
-    }
-
-    // 计算准确率
-    const accuracy = totalChars > 0
-        ? Math.round((correctChars / totalChars) * 100)
-        : 100;
-    accuracyDisplay.textContent = `${accuracy}%`;
-
-    // 更新计数
-    correctCountDisplay.textContent = correctChars;
-    errorCountDisplay.textContent = errorChars;
-
-    // 更新进度
-    const progress = Math.round((currentIndex / currentText.length) * 100);
-    progressFill.style.width = `${progress}%`;
-    progressText.textContent = `${currentIndex} / ${currentText.length}`;
-}
-
-// 结束游戏
-function endGame() {
-    isGameActive = false;
-    clearInterval(timerInterval);
-    textInput.disabled = true;
-
-    playCompleteSound(); // 播放完成音效
-
-    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-    const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
-    const words = correctChars / 5;
-    const wpm = Math.round(words / elapsedMinutes) || 0;
-    const accuracy = Math.round((correctChars / totalChars) * 100);
-
-    // 显示结果
-    document.getElementById('finalWpm').textContent = `${wpm} WPM`;
-    document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
-    document.getElementById('finalTime').textContent = `${elapsedSeconds}s`;
-    document.getElementById('finalCounts').textContent = `${correctChars} / ${errorChars}`;
-
-    showModal();
-}
-
-// 显示/隐藏模态框
-function showModal() {
-    resultModal.classList.add('show');
-}
-
-function hideModal() {
-    resultModal.classList.remove('show');
-}
-
-// 启动应用 - 等待DOM完全加载
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+// 启动
+init();
