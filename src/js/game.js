@@ -148,10 +148,10 @@ export class TypingGame {
                 }
             }
 
-            // Alt + R 重置（模拟点击重置按钮）
-            if (e.altKey && e.key === 'r') {
+            // Alt + C 重置（模拟点击重置按钮）
+            if (e.altKey && e.key === 'c') {
                 e.preventDefault();
-                console.log('[Game] Alt+R被按下，触发重置');
+                console.log('[Game] Alt+C被按下，触发重置');
                 this.elements.resetBtn?.click();
             }
         });

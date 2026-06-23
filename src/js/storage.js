@@ -23,7 +23,15 @@ class StorageManager {
     get(key, defaultValue = null) {
         try {
             const item = localStorage.getItem(this.prefix + key);
-            return item ? JSON.parse(item) : defaultValue;
+            if (!item) return defaultValue;
+
+            // 尝试解析JSON，如果失败则直接返回原始值（用于兼容旧版本）
+            try {
+                return JSON.parse(item);
+            } catch (parseError) {
+                console.warn(`Failed to parse ${key}, returning raw value:`, item);
+                return item;
+            }
         } catch (e) {
             console.error('Storage get error:', e);
             return defaultValue;
