@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Typing - 代码打字练习</title>
     <meta name="description" content="A typing game for improving coding speed">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -75,17 +74,8 @@
         </div>
 
         <div class="input-section">
-            <textarea
-                id="textInput"
-                class="text-input"
-                placeholder="在此输入代码...（支持Tab键缩进）"
-                spellcheck="false"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="off"
-                tabindex="0"
-            ></textarea>
-            <div class="input-hint">💡 提示：Tab键已完美支持 • 开始输入即可计时</div>
+            <div id="editorContainer"></div>
+            <div class="input-hint">💡 提示：Tab键完美支持（CodeMirror编辑器）• 开始输入即可计时</div>
         </div>
 
         <div class="controls">
@@ -93,7 +83,7 @@
             <button class="btn btn-secondary" id="restartBtn">🔄 重置 (R)</button>
         </div>
 
-        <div class="version">v1.3.2 - Tab完美支持</div>
+        <div class="version">v2.0.0 - CodeMirror编辑器</div>
 
         <div class="result-modal" id="resultModal">
             <div class="modal-content">
@@ -125,6 +115,6 @@
     </div>
 
     <script src="texts.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
