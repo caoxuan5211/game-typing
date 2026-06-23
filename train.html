@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>训练 - Code Typing Lab</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/train.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 导航栏 -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-title">Code Typing Lab</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="train.html" class="nav-link active">训练</a>
+                <a href="stats.html" class="nav-link">统计</a>
+            </div>
+            <div class="nav-actions">
+                <button class="icon-btn" id="soundToggle" title="音效">🔊</button>
+                <button class="icon-btn" id="themeToggle" title="主题">🌙</button>
+            </div>
+        </nav>
+
+        <!-- 训练主区域 -->
+        <main class="train-container">
+            <!-- 侧边栏 -->
+            <aside class="sidebar">
+                <!-- 状态卡片 -->
+                <div class="status-card">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-text" id="statusText">准备开始</span>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="stats-card">
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-label">WPM</div>
+                            <div class="stat-value" id="wpm">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">准确率</div>
+                            <div class="stat-value" id="accuracy">100<span class="stat-unit">%</span></div>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-label">连击</div>
+                            <div class="stat-value" id="combo">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">时间</div>
+                            <div class="stat-value" id="time">0<span class="stat-unit">s</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 进度卡片 -->
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <span class="progress-grade" id="grade">-</span>
+                        <span class="progress-percent" id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                </div>
+
+                <!-- 模式选择 -->
+                <div class="mode-card">
+                    <div class="card-title">训练模式</div>
+                    <div class="mode-grid">
+                        <button class="mode-btn active" data-mode="code">
+                            <span class="mode-icon">📝</span>
+                            <span class="mode-label">代码</span>
+                        </button>
+                        <button class="mode-btn" data-mode="symbols">
+                            <span class="mode-icon">🔣</span>
+                            <span class="mode-label">符号</span>
+                        </button>
+                        <button class="mode-btn" data-mode="flow">
+                            <span class="mode-icon">📖</span>
+                            <span class="mode-label">长段</span>
+                        </button>
+                        <button class="mode-btn" data-mode="custom">
+                            <span class="mode-icon">✏️</span>
+                            <span class="mode-label">自定义</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 难度选择 -->
+                <div class="difficulty-card">
+                    <div class="card-title">难度</div>
+                    <div class="difficulty-btns">
+                        <button class="difficulty-btn" data-difficulty="easy">简单</button>
+                        <button class="difficulty-btn active" data-difficulty="medium">标准</button>
+                        <button class="difficulty-btn" data-difficulty="hard">困难</button>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-btns">
+                    <button class="btn btn-primary btn-block" id="startBtn">
+                        <span>开始训练</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                    <button class="btn btn-secondary btn-block" id="resetBtn">换一题</button>
+                </div>
+            </aside>
+
+            <!-- 代码显示区（唯一的输入区） -->
+            <section class="code-area">
+                <div class="code-header">
+                    <div class="code-info">
+                        <span class="code-title" id="snippetTitle">选择模式开始</span>
+                        <span class="code-meta" id="snippetMeta">0 字符</span>
+                    </div>
+                    <div class="code-actions">
+                        <button class="icon-btn" id="resetCodeBtn" title="重置">🔄</button>
+                    </div>
+                </div>
+
+                <div class="code-display" id="codeDisplay">
+                    <div class="code-hint">
+                        <div class="hint-icon">⌨️</div>
+                        <h3>开始打字训练</h3>
+                        <p>点击"开始训练"按钮，然后直接在此区域开始打字</p>
+                        <p class="hint-tip">提示：按 ESC 暂停，按 Enter 可快速开始/继续</p>
+                    </div>
+                </div>
+
+                <!-- 隐藏的 textarea 用于捕获输入 -->
+                <textarea
+                    id="hiddenInput"
+                    class="hidden-input"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                ></textarea>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 自定义文本模态框 -->
+    <div class="modal" id="customModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>自定义训练文本</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <textarea
+                    id="customText"
+                    class="custom-textarea"
+                    placeholder="粘贴你想练习的代码片段..."
+                    spellcheck="false"
+                ></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelCustom">取消</button>
+                <button class="btn btn-primary" id="saveCustom">保存并开始</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/train.js"></script>
+</body>
+</html>

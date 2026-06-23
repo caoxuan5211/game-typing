@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统计 - Code Typing Lab</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/stats.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 导航栏 -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-title">Code Typing Lab</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">首页</a>
+                <a href="train.html" class="nav-link">训练</a>
+                <a href="stats.html" class="nav-link active">统计</a>
+            </div>
+            <div class="nav-actions">
+                <button class="icon-btn" id="soundToggle" title="音效">🔊</button>
+                <button class="icon-btn" id="themeToggle" title="主题">🌙</button>
+            </div>
+        </nav>
+
+        <!-- 统计内容 -->
+        <main class="stats-container">
+            <div class="stats-header">
+                <h1>训练统计</h1>
+                <p>查看你的训练进度和成绩</p>
+            </div>
+
+            <!-- 概览卡片 -->
+            <section class="overview-grid">
+                <div class="overview-card">
+                    <div class="overview-icon">🏆</div>
+                    <div class="overview-value" id="bestWpm">0</div>
+                    <div class="overview-label">最佳 WPM</div>
+                </div>
+
+                <div class="overview-card">
+                    <div class="overview-icon">🎯</div>
+                    <div class="overview-value" id="bestAccuracy">0<span class="overview-unit">%</span></div>
+                    <div class="overview-label">最高准确率</div>
+                </div>
+
+                <div class="overview-card">
+                    <div class="overview-icon">📊</div>
+                    <div class="overview-value" id="totalRuns">0</div>
+                    <div class="overview-label">总训练次数</div>
+                </div>
+
+                <div class="overview-card">
+                    <div class="overview-icon">🔥</div>
+                    <div class="overview-value" id="dayStreak">0</div>
+                    <div class="overview-label">连续天数</div>
+                </div>
+            </section>
+
+            <!-- 今日进度 -->
+            <section class="daily-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>今日训练目标</h2>
+                        <span class="section-meta" id="dailyGoalText">0 / 1200 字符</span>
+                    </div>
+                    <div class="daily-progress">
+                        <div class="daily-progress-bar" id="dailyProgressBar"></div>
+                    </div>
+                    <p class="section-desc">继续保持，每日完成 1200 字符可以有效提升打字速度！</p>
+                </div>
+            </section>
+
+            <!-- 最近成绩 -->
+            <section class="history-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>最近成绩</h2>
+                        <button class="btn btn-secondary btn-sm" id="clearHistory">清空记录</button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📝</div>
+                            <p>暂无训练记录</p>
+                            <a href="train.html" class="btn btn-primary">开始训练</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="js/stats.js"></script>
+</body>
+</html>

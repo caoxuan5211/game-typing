@@ -3,190 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Code Typing Lab - 优雅的代码打字训练">
-    <meta name="theme-color" content="#3C5A78">
-    <title>Code Typing Lab - 优雅的代码打字训练</title>
-    <link rel="stylesheet" href="src/css/main.css?v=3.0.0">
+    <meta name="description" content="Code Typing Lab - 沉浸式代码打字训练">
+    <title>Code Typing Lab</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
-    <main class="app-shell">
-        <!-- Header -->
-        <header class="topbar">
-            <div class="topbar-badge">type.mineguai.com</div>
-            <h1>Code Typing Lab</h1>
-            <p class="topbar-subtitle">为程序员设计的代码打字训练平台</p>
-            <div class="top-actions">
-                <button class="btn-secondary" id="soundBtn" type="button" aria-pressed="true">
-                    <span id="soundIcon">🔊</span> 音效
-                </button>
-                <button class="btn-secondary" id="themeBtn" type="button">主题</button>
-                <a class="btn-secondary" href="https://github.com/caoxuan5211/game-typing" target="_blank" rel="noopener">GitHub</a>
+    <div class="app">
+        <!-- 导航栏 -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-title">Code Typing Lab</span>
             </div>
-        </header>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">首页</a>
+                <a href="train.html" class="nav-link">训练</a>
+                <a href="stats.html" class="nav-link">统计</a>
+            </div>
+            <div class="nav-actions">
+                <button class="icon-btn" id="soundToggle" title="音效">🔊</button>
+                <button class="icon-btn" id="themeToggle" title="主题">🌙</button>
+            </div>
+        </nav>
 
-        <!-- Daily Goal Card -->
-        <section class="training-card" aria-label="今日训练">
-            <div class="panel-header">
-                <h3 class="panel-title">今日训练目标</h3>
-                <span class="panel-meta" id="dailyGoalText">0 / 1200 字符</span>
-            </div>
-            <div class="goal-meter">
-                <span id="dailyGoalBar"></span>
-            </div>
-            <div class="mini-grid">
-                <div class="mini-stat">
-                    <span>最佳速度</span>
-                    <strong id="bestWpm">0 WPM</strong>
+        <!-- 英雄区 -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">极速上手 · 专注训练</div>
+                <h1 class="hero-title">
+                    让代码打字<br>
+                    <span class="gradient-text">成为本能</span>
+                </h1>
+                <p class="hero-subtitle">
+                    沉浸式训练环境，实时反馈，科学统计<br>
+                    专为程序员设计的打字练习平台
+                </p>
+                <div class="hero-actions">
+                    <a href="train.html" class="btn btn-primary btn-lg">
+                        开始训练
+                        <span class="btn-icon">→</span>
+                    </a>
+                    <a href="stats.html" class="btn btn-secondary btn-lg">
+                        查看统计
+                    </a>
                 </div>
-                <div class="mini-stat">
-                    <span>完成场次</span>
-                    <strong id="totalRuns">0</strong>
-                </div>
-                <div class="mini-stat">
-                    <span>连续天数</span>
-                    <strong id="dayStreak">0 天</strong>
-                </div>
-            </div>
-        </section>
 
-        <!-- Session Status -->
-        <section class="session-panel" aria-label="训练状态">
-            <div class="session-status">
-                <span class="status-dot" id="statusDot"></span>
-                <span class="status-text" id="statusText">准备开始</span>
-            </div>
-
-            <div class="score-row">
-                <div class="score-item">
-                    <span class="metric-label">速度</span>
-                    <div class="metric-value" id="wpm">0</div>
-                    <div class="stat-meta">WPM</div>
-                </div>
-                <div class="score-item">
-                    <span class="metric-label">准确率</span>
-                    <div class="metric-value" id="accuracy">100</div>
-                    <div class="stat-meta">%</div>
-                </div>
-                <div class="score-item">
-                    <span class="metric-label">连击</span>
-                    <div class="metric-value" id="combo">0</div>
-                    <div class="stat-meta">字符</div>
-                </div>
-                <div class="score-item">
-                    <span class="metric-label">时间</span>
-                    <div class="metric-value" id="time">0</div>
-                    <div class="stat-meta">秒</div>
+                <!-- 快速统计 -->
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalSessions">0</div>
+                        <div class="stat-label">训练次数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bestWpm">0</div>
+                        <div class="stat-label">最佳 WPM</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="dayStreak">0</div>
+                        <div class="stat-label">连续天数</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="progress-container">
-                <div class="progress-header">
-                    <span id="grade">评级: -</span>
-                    <span id="progressText">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-bar" id="progressBar"></div>
+            <!-- 装饰性代码预览 -->
+            <div class="hero-demo">
+                <div class="demo-window">
+                    <div class="window-header">
+                        <div class="window-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="window-title">example.js</div>
+                    </div>
+                    <div class="window-content">
+                        <pre class="demo-code"><code><span class="code-keyword">const</span> <span class="code-function">train</span> = <span class="code-keyword">async</span> () => {
+  <span class="code-keyword">const</span> result = <span class="code-keyword">await</span> <span class="code-function">practice</span>();
+  <span class="code-keyword">if</span> (result.wpm > <span class="code-number">100</span>) {
+    <span class="code-function">celebrate</span>(<span class="code-string">'🎉'</span>);
+  }
+};</code></pre>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Control Panel -->
-        <section class="control-panel" aria-label="训练设置">
-            <div class="control-row">
-                <div class="segmented" role="tablist" aria-label="练习模式">
-                    <button class="segment active" type="button" data-mode="code">代码</button>
-                    <button class="segment" type="button" data-mode="symbols">符号</button>
-                    <button class="segment" type="button" data-mode="flow">长段</button>
-                    <button class="segment" type="button" data-mode="custom">自定义</button>
+        <!-- 特性展示 -->
+        <section class="features">
+            <div class="section-header">
+                <h2 class="section-title">为什么选择我们</h2>
+                <p class="section-subtitle">专业的打字训练工具，助你提升编程效率</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">实时反馈</h3>
+                    <p class="feature-desc">每个按键都有即时音效和视觉反馈，让你沉浸其中</p>
                 </div>
 
-                <div class="segmented" role="tablist" aria-label="难度">
-                    <button class="segment" type="button" data-difficulty="easy">简单</button>
-                    <button class="segment active" type="button" data-difficulty="medium">标准</button>
-                    <button class="segment" type="button" data-difficulty="hard">困难</button>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">科学统计</h3>
+                    <p class="feature-desc">WPM、准确率、连击数、键位热区，全方位分析你的进步</p>
                 </div>
 
-                <button class="btn-primary" id="startBtn" type="button">开始训练</button>
-                <button class="btn-secondary" id="resetBtn" type="button">换一题</button>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">真实代码</h3>
+                    <p class="feature-desc">不是无意义的字母组合，而是真实的代码片段</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">沉浸体验</h3>
+                    <p class="feature-desc">精心设计的界面和交互，让训练成为享受</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3 class="feature-title">数据本地</h3>
+                    <p class="feature-desc">所有数据保存在本地，隐私安全有保障</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3 class="feature-title">持续进步</h3>
+                    <p class="feature-desc">每日目标、连续打卡，帮助你养成训练习惯</p>
+                </div>
             </div>
         </section>
 
-        <!-- Custom Text Panel -->
-        <section class="custom-panel" id="customPanel" hidden>
-            <label for="customText">自定义训练文本</label>
-            <textarea
-                id="customText"
-                spellcheck="false"
-                placeholder="粘贴你想练习的代码片段..."></textarea>
-            <button class="btn-secondary" id="saveCustomBtn" type="button">保存文本</button>
-        </section>
-
-        <!-- Workspace -->
-        <section class="workspace">
-            <div class="code-stage" aria-label="目标文本">
-                <div class="stage-toolbar">
-                    <span class="stage-title" id="snippetTitle">JavaScript 基础</span>
-                    <span class="stage-meta" id="snippetMeta">标准 · 0 字符</span>
+        <!-- 底部 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-brand">
+                        <span class="footer-icon">⚡</span>
+                        Code Typing Lab
+                    </div>
+                    <p class="footer-desc">专为程序员设计的代码打字训练平台</p>
                 </div>
-                <pre id="targetText" class="target-text" aria-live="polite"></pre>
+                <div class="footer-right">
+                    <a href="https://github.com/caoxuan5211/game-typing" target="_blank" class="footer-link">
+                        GitHub
+                    </a>
+                    <span class="footer-divider">·</span>
+                    <span class="footer-version">v3.0.0</span>
+                </div>
             </div>
+        </footer>
+    </div>
 
-            <div class="input-stage">
-                <div class="input-label">输入区域</div>
-                <textarea
-                    id="typingInput"
-                    spellcheck="false"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    disabled
-                    placeholder="按下开始按钮后开始打字..."
-                ></textarea>
-            </div>
-        </section>
-
-        <!-- Feedback Grid -->
-        <section class="feedback-grid">
-            <article class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title">训练反馈</h3>
-                    <span class="panel-meta" id="feedbackState">等待输入</span>
-                </div>
-                <ul class="feedback-list" id="feedbackList">
-                    <li>点击"开始训练"按钮开始第一轮练习</li>
-                    <li>输入错误会被高亮标出，按退格修正后继续</li>
-                    <li>完成后会自动保存成绩和今日训练数据</li>
-                </ul>
-            </article>
-
-            <article class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title">键位热区</h3>
-                    <span class="panel-meta" id="weakKeyText">暂无数据</span>
-                </div>
-                <div class="keyboard-map" id="keyboardMap"></div>
-            </article>
-
-            <article class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title">最近成绩</h3>
-                    <button class="btn-ghost" id="clearStatsBtn" type="button">清空</button>
-                </div>
-                <ol class="history-list" id="historyList">
-                    <li>
-                        <div class="history-grade">-</div>
-                        <div class="history-wpm">暂无记录</div>
-                        <div class="history-meta">完成一轮后显示</div>
-                    </li>
-                </ol>
-            </article>
-        </section>
-    </main>
-
-    <!-- Toast -->
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-    <!-- Audio Context (will be initialized by JS) -->
-    <script type="module" src="src/js/main.js?v=3.0.0"></script>
+    <script type="module" src="js/home.js"></script>
 </body>
 </html>
