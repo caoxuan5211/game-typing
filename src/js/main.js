@@ -33,8 +33,7 @@ function init() {
     const game = new TypingGame();
     game.init();
 
-    // 初始化模态框管理器
-    ModalManager.init();
+    // ModalManager 已经在 modal.js 中作为单例初始化，不需要再次调用 init()
 
     // 监听自定义文本设置事件
     window.addEventListener('customTextSet', (e) => {

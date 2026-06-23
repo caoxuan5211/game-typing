@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "buildDate": "2026-06-23",
   "commit": "1fa31c3",
   "features": {
@@ -36,6 +36,7 @@
     "edge": ">=90"
   },
   "changelog": {
+    "1.0.4": "Fix Enter key, theme selection, and reset shortcut to Alt+R",
     "1.0.3": "Change reset shortcut from Ctrl+R to Ctrl+N to avoid browser refresh conflict",
     "1.0.2": "Bug fixes: Tab character validation, Enter key handling, keyboard shortcuts",
     "1.0.1": "Add sakura theme and keyboard shortcuts enhancement",

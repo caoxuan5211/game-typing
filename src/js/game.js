@@ -90,12 +90,7 @@ export class TypingGame {
             });
         });
 
-        // 主题选择
-        document.querySelectorAll('.theme-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                UIRenderer.setTheme(e.target.dataset.theme);
-            });
-        });
+        // 主题选择由 modal.js 处理，这里不重复绑定
 
         // 音效开关
         const soundToggle = document.getElementById('soundToggle');
@@ -141,12 +136,15 @@ export class TypingGame {
                 } else if (!inputFocused && !this.isPlaying) {
                     // 没有在输入且游戏未开始，Enter开始游戏（模拟点击开始按钮）
                     e.preventDefault();
-                    this.elements.startBtn?.click();
+                    const startBtn = document.getElementById('startBtn');
+                    if (startBtn && !startBtn.disabled) {
+                        startBtn.click();
+                    }
                 }
             }
 
-            // Ctrl/Cmd + N 重置（模拟点击重置按钮）
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            // Alt + R 重置（模拟点击重置按钮）
+            if (e.altKey && e.key === 'r') {
                 e.preventDefault();
                 this.elements.resetBtn?.click();
             }
