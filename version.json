@@ -1,47 +1,23 @@
 {
-  "version": "1.0.6",
+  "version": "2.0.0",
   "buildDate": "2026-06-23",
-  "commit": "1fa31c3",
+  "name": "Code Typing Lab",
   "features": {
-    "modes": ["code", "symbols", "mixed", "custom"],
-    "themes": ["purple", "ocean", "sunset", "forest", "midnight", "sakura"],
-    "achievements": 5,
-    "practiceTexts": 60,
-    "soundEffects": true,
+    "keyboardFirst": true,
+    "enterStart": true,
+    "tabIndentInput": true,
+    "themes": ["default", "focus", "daylight"],
+    "modes": ["code", "symbols", "flow", "custom"],
+    "dailyGoal": true,
+    "history": true,
+    "weakKeyHeatmap": true,
     "localStorage": true,
     "responsive": true
   },
-  "modules": {
-    "game": "Core game logic and state management",
-    "ui": "UI rendering and updates",
-    "stats": "Statistics calculation and tracking",
-    "sound": "Web Audio API sound effects",
-    "storage": "LocalStorage persistence layer",
-    "config": "Centralized configuration",
-    "data": "Practice text database",
-    "modal": "Modal system management",
-    "main": "Application entry point"
-  },
-  "metrics": {
-    "totalLines": 3500,
-    "modules": 12,
-    "components": 9,
-    "cssFiles": 3,
-    "jsFiles": 9
-  },
-  "browser": {
-    "chrome": ">=90",
-    "firefox": ">=88",
-    "safari": ">=14",
-    "edge": ">=90"
-  },
-  "changelog": {
-    "1.0.6": "Fix localStorage JSON parse error and change reset to Alt+C",
-    "1.0.5": "Add tab character support in practice texts and detailed debug logging",
-    "1.0.4": "Fix Enter key, theme selection, and reset shortcut to Alt+R",
-    "1.0.3": "Change reset shortcut from Ctrl+R to Ctrl+N to avoid browser refresh conflict",
-    "1.0.2": "Bug fixes: Tab character validation, Enter key handling, keyboard shortcuts",
-    "1.0.1": "Add sakura theme and keyboard shortcuts enhancement",
-    "1.0.0": "Initial modular rewrite with 5 themes and achievements"
-  }
+  "qualityFixes": [
+    "Enter starts, resumes, and advances the game outside active typing",
+    "Tab inserts a real indentation character in the input field",
+    "Theme changes use a single data-theme token path",
+    "The result flow no longer depends on stacked modals"
+  ]
 }

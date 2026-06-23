@@ -1,7 +1,7 @@
 {
   "name": "code-typing-game",
-  "version": "1.0.6",
-  "description": "专业的代码打字练习工具",
+  "version": "2.0.0",
+  "description": "面向程序员的代码打字训练游戏",
   "type": "module",
   "scripts": {
     "dev": "python -m http.server 8000",
@@ -19,5 +19,8 @@
     "game"
   ],
   "author": "caoxuan5211",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.61.0"
+  }
 }
