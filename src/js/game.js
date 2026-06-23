@@ -113,16 +113,36 @@ export class TypingGame {
 
         // 键盘快捷键
         document.addEventListener('keydown', (e) => {
+            // ESC 暂停
             if (e.key === 'Escape') {
                 if (this.isPlaying) {
                     this.pause();
                 }
             }
 
+            // Ctrl/Cmd + Enter 开始
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 if (!this.isPlaying) {
+                    e.preventDefault();
                     this.start();
                 }
+            }
+
+            // Enter 继续/开始（当输入框没有焦点时）
+            if (e.key === 'Enter' && document.activeElement !== this.elements.input) {
+                e.preventDefault();
+                if (!this.isPlaying) {
+                    this.start();
+                } else if (this.elements.modal?.classList.contains('show')) {
+                    UIRenderer.hideCompleteModal();
+                    this.reset();
+                }
+            }
+
+            // Ctrl/Cmd + R 重置
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                this.reset();
             }
         });
     }

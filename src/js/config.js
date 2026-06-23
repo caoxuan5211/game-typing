@@ -40,6 +40,13 @@ export const THEMES = {
         primary: '#2c3e50',
         secondary: '#34495e',
         accent: '#3498db'
+    },
+    sakura: {
+        name: '米粉色',
+        gradient: 'linear-gradient(135deg, #ffc3a0 0%, #ffafbd 100%)',
+        primary: '#ffafbd',
+        secondary: '#ffc3a0',
+        accent: '#ff9a9e'
     }
 };
 

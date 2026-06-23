@@ -389,6 +389,11 @@ body {
     animation: blink 1s infinite;
 }
 
+.code-display .tab-char {
+    display: inline-block;
+    border-bottom: 1px dotted var(--text-muted);
+}
+
 /* ===== Input Area ===== */
 .input-area {
     width: 100%;

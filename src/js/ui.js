@@ -20,16 +20,18 @@ export class UIRenderer {
         if (!this.elements.codeDisplay) return;
 
         let html = '';
-        const inputLength = currentInput.length;
+        let displayIndex = 0;
 
         for (let i = 0; i < targetText.length; i++) {
             const char = targetText[i];
             let className = '';
             let displayChar = char;
 
-            if (i < inputLength) {
-                className = currentInput[i] === char ? 'correct' : 'incorrect';
-            } else if (i === inputLength) {
+            // 比较字符（考虑Tab的特殊处理）
+            if (displayIndex < currentInput.length) {
+                const inputChar = currentInput[displayIndex];
+                className = inputChar === char ? 'correct' : 'incorrect';
+            } else if (displayIndex === currentInput.length) {
                 className = 'current';
             }
 
@@ -39,16 +41,18 @@ export class UIRenderer {
             } else if (char === '\n') {
                 displayChar = '<br>';
             } else if (char === '\t') {
-                displayChar = '&nbsp;&nbsp;&nbsp;&nbsp;';
+                // Tab显示为4个空格，但只占一个字符位置
+                displayChar = '<span class="tab-char">&nbsp;&nbsp;&nbsp;&nbsp;</span>';
             } else {
                 displayChar = this.escapeHtml(char);
             }
 
-            html += `<span class="${className}" data-index="${i}">${displayChar}</span>`;
+            html += `<span class="${className}" data-index="${displayIndex}">${displayChar}</span>`;
+            displayIndex++;
         }
 
         this.elements.codeDisplay.innerHTML = html;
-        this.scrollToCurrentChar(inputLength);
+        this.scrollToCurrentChar(currentInput.length);
     }
 
     escapeHtml(text) {
