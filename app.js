@@ -6,17 +6,22 @@ let startTime = null;
 let timerInterval = null;
 let totalChars = 0;
 let correctChars = 0;
+let errorChars = 0;
 let isGameActive = false;
+let isGameStarted = false;
 
 // DOM 元素
-const textDisplay = document.getElementById('textDisplay');
+const codeDisplay = document.getElementById('codeDisplay');
 const textInput = document.getElementById('textInput');
-const wpmDisplay = document.getElementById('wpm');
+const wpmValue = document.getElementById('wpm-value');
 const accuracyDisplay = document.getElementById('accuracy');
 const timerDisplay = document.getElementById('timer');
-const modeDisplay = document.getElementById('mode-display');
+const correctCountDisplay = document.getElementById('correct-count');
+const errorCountDisplay = document.getElementById('error-count');
+const progressText = document.getElementById('progress-text');
+const progressFill = document.getElementById('progress-fill');
+const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
-const nextBtn = document.getElementById('nextBtn');
 const resultModal = document.getElementById('resultModal');
 const modalRestartBtn = document.getElementById('modalRestartBtn');
 const modalNextBtn = document.getElementById('modalNextBtn');
@@ -32,12 +37,15 @@ function init() {
 function setupEventListeners() {
     textInput.addEventListener('input', handleInput);
     textInput.addEventListener('paste', (e) => e.preventDefault());
+
+    startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', restart);
-    nextBtn.addEventListener('click', loadNewText);
+
     modalRestartBtn.addEventListener('click', () => {
         hideModal();
         restart();
     });
+
     modalNextBtn.addEventListener('click', () => {
         hideModal();
         loadNewText();
@@ -48,20 +56,31 @@ function setupEventListeners() {
             modeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentMode = btn.dataset.mode;
-            updateModeDisplay();
             loadNewText();
         });
     });
-}
 
-// 更新模式显示
-function updateModeDisplay() {
-    const modeNames = {
-        'code': '代码片段',
-        'symbols': '符号练习',
-        'mixed': '混合模式'
-    };
-    modeDisplay.textContent = modeNames[currentMode];
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !isGameStarted && document.activeElement !== textInput) {
+            e.preventDefault();
+            startGame();
+        }
+        if (e.key === 'r' && !isGameActive) {
+            e.preventDefault();
+            restart();
+        }
+        if (e.key === 'Escape' && resultModal.classList.contains('show')) {
+            hideModal();
+        }
+    });
+
+    // 点击模态框外部关闭
+    resultModal.addEventListener('click', (e) => {
+        if (e.target === resultModal) {
+            hideModal();
+        }
+    });
 }
 
 // 加载新文本
@@ -92,57 +111,98 @@ function restart() {
     currentIndex = 0;
     totalChars = 0;
     correctChars = 0;
+    errorChars = 0;
     startTime = null;
     isGameActive = false;
+    isGameStarted = false;
 
     textInput.value = '';
-    textInput.disabled = false;
-    textInput.focus();
+    textInput.disabled = true;
+    startBtn.textContent = '▶️ 开始 (Enter)';
+    startBtn.style.display = 'inline-flex';
 
     clearInterval(timerInterval);
     timerDisplay.textContent = '0s';
-    wpmDisplay.textContent = '0';
+    wpmValue.textContent = '0';
     accuracyDisplay.textContent = '100%';
+    correctCountDisplay.textContent = '0';
+    errorCountDisplay.textContent = '0';
+    progressText.textContent = `0 / ${currentText.length}`;
+    progressFill.style.width = '0%';
 
     renderText();
 }
 
+// 开始游戏
+function startGame() {
+    if (isGameStarted) return;
+
+    isGameStarted = true;
+    isGameActive = true;
+    startTime = Date.now();
+    textInput.disabled = false;
+    textInput.focus();
+    startBtn.style.display = 'none';
+
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        timerDisplay.textContent = `${elapsed}s`;
+    }, 100);
+}
+
 // 渲染文本显示
 function renderText() {
-    textDisplay.innerHTML = '';
+    codeDisplay.innerHTML = '';
 
-    for (let i = 0; i < currentText.length; i++) {
-        const char = currentText[i];
-        const span = document.createElement('span');
+    const lines = currentText.split('\n');
 
-        if (char === '\n') {
-            span.innerHTML = '<br>';
-        } else if (char === ' ') {
-            span.innerHTML = '&nbsp;';
-        } else {
-            span.textContent = char;
-        }
+    lines.forEach((line, lineIndex) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'code-line';
 
-        if (i < currentIndex) {
-            const inputChar = textInput.value[i];
-            if (inputChar === char) {
-                span.classList.add('correct');
+        const lineNumber = document.createElement('span');
+        lineNumber.className = 'line-number';
+        lineNumber.textContent = lineIndex + 1;
+
+        const lineContent = document.createElement('span');
+        lineContent.className = 'line-content';
+
+        let charOffset = lines.slice(0, lineIndex).reduce((sum, l) => sum + l.length + 1, 0);
+
+        for (let i = 0; i < line.length; i++) {
+            const globalIndex = charOffset + i;
+            const char = line[i];
+            const span = document.createElement('span');
+
+            if (char === ' ') {
+                span.innerHTML = '&nbsp;';
             } else {
-                span.classList.add('incorrect');
+                span.textContent = char;
             }
-        } else if (i === currentIndex) {
-            span.classList.add('current');
+
+            if (globalIndex < currentIndex) {
+                const inputChar = textInput.value[globalIndex];
+                if (inputChar === char) {
+                    span.classList.add('char-correct');
+                } else {
+                    span.classList.add('char-incorrect');
+                }
+            } else if (globalIndex === currentIndex) {
+                span.classList.add('char-current');
+            }
+
+            lineContent.appendChild(span);
         }
 
-        textDisplay.appendChild(span);
-    }
+        lineDiv.appendChild(lineNumber);
+        lineDiv.appendChild(lineContent);
+        codeDisplay.appendChild(lineDiv);
+    });
 }
 
 // 处理输入
 function handleInput(e) {
-    if (!isGameActive) {
-        startGame();
-    }
+    if (!isGameActive) return;
 
     const inputValue = textInput.value;
     currentIndex = inputValue.length;
@@ -150,10 +210,13 @@ function handleInput(e) {
     // 计算统计数据
     totalChars = currentIndex;
     correctChars = 0;
+    errorChars = 0;
 
     for (let i = 0; i < currentIndex; i++) {
         if (inputValue[i] === currentText[i]) {
             correctChars++;
+        } else {
+            errorChars++;
         }
     }
 
@@ -166,25 +229,14 @@ function handleInput(e) {
     }
 }
 
-// 开始游戏
-function startGame() {
-    isGameActive = true;
-    startTime = Date.now();
-
-    timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        timerDisplay.textContent = `${elapsed}s`;
-    }, 100);
-}
-
 // 更新统计
 function updateStats() {
-    // 计算 WPM (每分钟字数)
+    // 计算 WPM
     if (startTime) {
         const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
-        const words = correctChars / 5; // 标准：5个字符 = 1个词
+        const words = correctChars / 5;
         const wpm = Math.round(words / elapsedMinutes) || 0;
-        wpmDisplay.textContent = wpm;
+        wpmValue.textContent = wpm;
     }
 
     // 计算准确率
@@ -192,6 +244,15 @@ function updateStats() {
         ? Math.round((correctChars / totalChars) * 100)
         : 100;
     accuracyDisplay.textContent = `${accuracy}%`;
+
+    // 更新计数
+    correctCountDisplay.textContent = correctChars;
+    errorCountDisplay.textContent = errorChars;
+
+    // 更新进度
+    const progress = Math.round((currentIndex / currentText.length) * 100);
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${currentIndex} / ${currentText.length}`;
 }
 
 // 结束游戏
@@ -206,10 +267,11 @@ function endGame() {
     const wpm = Math.round(words / elapsedMinutes) || 0;
     const accuracy = Math.round((correctChars / totalChars) * 100);
 
-    // 显示结果模态框
+    // 显示结果
     document.getElementById('finalWpm').textContent = `${wpm} WPM`;
     document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
     document.getElementById('finalTime').textContent = `${elapsedSeconds}s`;
+    document.getElementById('finalCounts').textContent = `${correctChars} / ${errorChars}`;
 
     showModal();
 }
@@ -222,20 +284,6 @@ function showModal() {
 function hideModal() {
     resultModal.classList.remove('show');
 }
-
-// 点击模态框外部关闭
-resultModal.addEventListener('click', (e) => {
-    if (e.target === resultModal) {
-        hideModal();
-    }
-});
-
-// ESC 键关闭模态框
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && resultModal.classList.contains('show')) {
-        hideModal();
-    }
-});
 
 // 启动应用
 init();
