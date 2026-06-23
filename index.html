@@ -3,105 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Code Typing Lab - 面向程序员的代码打字训练游戏">
-    <meta name="theme-color" content="#101417">
-    <title>Code Typing Lab</title>
-    <link rel="stylesheet" href="src/css/main.css?v=2.0.0">
+    <meta name="description" content="Code Typing Lab - 优雅的代码打字训练">
+    <meta name="theme-color" content="#3C5A78">
+    <title>Code Typing Lab - 优雅的代码打字训练</title>
+    <link rel="stylesheet" href="src/css/main.css?v=3.0.0">
 </head>
 <body>
-    <main class="app-shell" aria-label="Code Typing Lab">
+    <main class="app-shell">
+        <!-- Header -->
         <header class="topbar">
-            <div>
-                <p class="app-kicker">type.mineguai.com</p>
-                <h1>Code Typing Lab</h1>
-            </div>
-            <div class="top-actions" aria-label="全局操作">
-                <button class="tool-btn" id="soundBtn" type="button" aria-pressed="true" title="音效开关">Sound</button>
-                <button class="tool-btn" id="themeBtn" type="button" title="切换配色">Theme</button>
-                <a class="tool-link" href="https://github.com/caoxuan5211/game-typing" target="_blank" rel="noopener">GitHub</a>
+            <div class="topbar-badge">type.mineguai.com</div>
+            <h1>Code Typing Lab</h1>
+            <p class="topbar-subtitle">为程序员设计的代码打字训练平台</p>
+            <div class="top-actions">
+                <button class="btn-secondary" id="soundBtn" type="button" aria-pressed="true">
+                    <span id="soundIcon">🔊</span> 音效
+                </button>
+                <button class="btn-secondary" id="themeBtn" type="button">主题</button>
+                <a class="btn-secondary" href="https://github.com/caoxuan5211/game-typing" target="_blank" rel="noopener">GitHub</a>
             </div>
         </header>
 
-        <section class="hero-grid" aria-label="训练状态">
-            <div class="session-panel">
-                <div class="session-status">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">准备开始</span>
+        <!-- Daily Goal Card -->
+        <section class="training-card" aria-label="今日训练">
+            <div class="panel-header">
+                <h3 class="panel-title">今日训练目标</h3>
+                <span class="panel-meta" id="dailyGoalText">0 / 1200 字符</span>
+            </div>
+            <div class="goal-meter">
+                <span id="dailyGoalBar"></span>
+            </div>
+            <div class="mini-grid">
+                <div class="mini-stat">
+                    <span>最佳速度</span>
+                    <strong id="bestWpm">0 WPM</strong>
                 </div>
-                <div class="score-row">
-                    <div>
-                        <span class="metric-label">WPM</span>
-                        <strong id="wpm">0</strong>
-                    </div>
-                    <div>
-                        <span class="metric-label">准确率</span>
-                        <strong id="accuracy">100%</strong>
-                    </div>
-                    <div>
-                        <span class="metric-label">连击</span>
-                        <strong id="combo">0</strong>
-                    </div>
-                    <div>
-                        <span class="metric-label">时间</span>
-                        <strong id="time">0s</strong>
-                    </div>
+                <div class="mini-stat">
+                    <span>完成场次</span>
+                    <strong id="totalRuns">0</strong>
                 </div>
-                <div class="grade-strip">
-                    <span id="grade">评级 -</span>
-                    <div class="progress-track" aria-label="完成进度">
-                        <span id="progressBar"></span>
-                    </div>
+                <div class="mini-stat">
+                    <span>连续天数</span>
+                    <strong id="dayStreak">0 天</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Status -->
+        <section class="session-panel" aria-label="训练状态">
+            <div class="session-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">准备开始</span>
+            </div>
+
+            <div class="score-row">
+                <div class="score-item">
+                    <span class="metric-label">速度</span>
+                    <div class="metric-value" id="wpm">0</div>
+                    <div class="stat-meta">WPM</div>
+                </div>
+                <div class="score-item">
+                    <span class="metric-label">准确率</span>
+                    <div class="metric-value" id="accuracy">100</div>
+                    <div class="stat-meta">%</div>
+                </div>
+                <div class="score-item">
+                    <span class="metric-label">连击</span>
+                    <div class="metric-value" id="combo">0</div>
+                    <div class="stat-meta">字符</div>
+                </div>
+                <div class="score-item">
+                    <span class="metric-label">时间</span>
+                    <div class="metric-value" id="time">0</div>
+                    <div class="stat-meta">秒</div>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span id="grade">评级: -</span>
                     <span id="progressText">0%</span>
                 </div>
+                <div class="progress-track">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
             </div>
-
-            <aside class="training-card" aria-label="今日训练">
-                <div class="card-head">
-                    <h2>今日训练</h2>
-                    <span id="dailyGoalText">0 / 1200 字符</span>
-                </div>
-                <div class="goal-meter"><span id="dailyGoalBar"></span></div>
-                <div class="mini-grid">
-                    <div><span>最佳</span><strong id="bestWpm">0 WPM</strong></div>
-                    <div><span>场次</span><strong id="totalRuns">0</strong></div>
-                    <div><span>连续</span><strong id="dayStreak">0 天</strong></div>
-                </div>
-            </aside>
         </section>
 
+        <!-- Control Panel -->
         <section class="control-panel" aria-label="训练设置">
-            <div class="segmented" role="tablist" aria-label="练习模式">
-                <button class="segment active" type="button" data-mode="code">代码</button>
-                <button class="segment" type="button" data-mode="symbols">符号</button>
-                <button class="segment" type="button" data-mode="flow">长段</button>
-                <button class="segment" type="button" data-mode="custom">自定义</button>
+            <div class="control-row">
+                <div class="segmented" role="tablist" aria-label="练习模式">
+                    <button class="segment active" type="button" data-mode="code">代码</button>
+                    <button class="segment" type="button" data-mode="symbols">符号</button>
+                    <button class="segment" type="button" data-mode="flow">长段</button>
+                    <button class="segment" type="button" data-mode="custom">自定义</button>
+                </div>
+
+                <div class="segmented" role="tablist" aria-label="难度">
+                    <button class="segment" type="button" data-difficulty="easy">简单</button>
+                    <button class="segment active" type="button" data-difficulty="medium">标准</button>
+                    <button class="segment" type="button" data-difficulty="hard">困难</button>
+                </div>
+
+                <button class="btn-primary" id="startBtn" type="button">开始训练</button>
+                <button class="btn-secondary" id="resetBtn" type="button">换一题</button>
             </div>
-            <div class="segmented compact" role="tablist" aria-label="难度">
-                <button class="segment" type="button" data-difficulty="easy">短</button>
-                <button class="segment active" type="button" data-difficulty="medium">标准</button>
-                <button class="segment" type="button" data-difficulty="hard">硬核</button>
-            </div>
-            <button class="primary-action" id="startBtn" type="button">Enter 开始</button>
-            <button class="secondary-action" id="resetBtn" type="button">换一题</button>
         </section>
 
+        <!-- Custom Text Panel -->
         <section class="custom-panel" id="customPanel" hidden>
             <label for="customText">自定义训练文本</label>
-            <textarea id="customText" spellcheck="false" placeholder="粘贴一段你想练的代码，保存后进入自定义模式。"></textarea>
-            <button class="secondary-action" id="saveCustomBtn" type="button">保存文本</button>
+            <textarea
+                id="customText"
+                spellcheck="false"
+                placeholder="粘贴你想练习的代码片段..."></textarea>
+            <button class="btn-secondary" id="saveCustomBtn" type="button">保存文本</button>
         </section>
 
+        <!-- Workspace -->
         <section class="workspace">
             <div class="code-stage" aria-label="目标文本">
                 <div class="stage-toolbar">
-                    <span id="snippetTitle">JavaScript 基础</span>
-                    <span id="snippetMeta">标准 · 0 字符</span>
+                    <span class="stage-title" id="snippetTitle">JavaScript 基础</span>
+                    <span class="stage-meta" id="snippetMeta">标准 · 0 字符</span>
                 </div>
                 <pre id="targetText" class="target-text" aria-live="polite"></pre>
             </div>
 
             <div class="input-stage">
-                <label for="typingInput">输入区</label>
+                <div class="input-label">输入区域</div>
                 <textarea
                     id="typingInput"
                     spellcheck="false"
@@ -109,43 +140,53 @@
                     autocorrect="off"
                     autocapitalize="off"
                     disabled
-                    placeholder="按 Enter 开始，Tab 会插入真实缩进。"
+                    placeholder="按下开始按钮后开始打字..."
                 ></textarea>
             </div>
         </section>
 
+        <!-- Feedback Grid -->
         <section class="feedback-grid">
-            <article class="insight-panel">
-                <div class="card-head">
-                    <h2>训练反馈</h2>
-                    <span id="feedbackState">等待输入</span>
+            <article class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">训练反馈</h3>
+                    <span class="panel-meta" id="feedbackState">等待输入</span>
                 </div>
                 <ul class="feedback-list" id="feedbackList">
-                    <li>按 Enter 开始第一轮训练。</li>
-                    <li>输入错误会被标出，修正后继续。</li>
-                    <li>完成后会保存成绩和今日字符数。</li>
+                    <li>点击"开始训练"按钮开始第一轮练习</li>
+                    <li>输入错误会被高亮标出，按退格修正后继续</li>
+                    <li>完成后会自动保存成绩和今日训练数据</li>
                 </ul>
             </article>
 
-            <article class="keyboard-panel">
-                <div class="card-head">
-                    <h2>键位热区</h2>
-                    <span id="weakKeyText">暂无弱项</span>
+            <article class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">键位热区</h3>
+                    <span class="panel-meta" id="weakKeyText">暂无数据</span>
                 </div>
-                <div class="keyboard-map" id="keyboardMap" aria-label="错误键位热区"></div>
+                <div class="keyboard-map" id="keyboardMap"></div>
             </article>
 
-            <article class="records-panel">
-                <div class="card-head">
-                    <h2>最近成绩</h2>
-                    <button class="text-btn" id="clearStatsBtn" type="button">清空</button>
+            <article class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">最近成绩</h3>
+                    <button class="btn-ghost" id="clearStatsBtn" type="button">清空</button>
                 </div>
-                <ol class="history-list" id="historyList"></ol>
+                <ol class="history-list" id="historyList">
+                    <li>
+                        <div class="history-grade">-</div>
+                        <div class="history-wpm">暂无记录</div>
+                        <div class="history-meta">完成一轮后显示</div>
+                    </li>
+                </ol>
             </article>
         </section>
     </main>
 
+    <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="src/js/main.js?v=2.0.0"></script>
+
+    <!-- Audio Context (will be initialized by JS) -->
+    <script type="module" src="src/js/main.js?v=3.0.0"></script>
 </body>
 </html>

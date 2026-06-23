@@ -1,7 +1,9 @@
-const VERSION = "2.0.0";
+import { audioSystem } from './audio.js';
+
+const VERSION = "3.0.0";
 const DAILY_GOAL = 1200;
-const STORAGE_KEY = "code_typing_lab_v2";
-const THEMES = ["default", "focus", "daylight"];
+const STORAGE_KEY = "code_typing_lab_v3";
+const THEMES = ["light", "dark"];
 
 const snippets = {
     code: [
@@ -208,12 +210,13 @@ function bindEvents() {
 
 function applyStoredSettings() {
     state.sound = store.sound ?? true;
-    state.themeIndex = Math.max(0, THEMES.indexOf(store.theme || "default"));
+    state.themeIndex = Math.max(0, THEMES.indexOf(store.theme || "light"));
     if (state.themeIndex < 0) state.themeIndex = 0;
     state.customText = store.customText || "";
     dom.customText.value = state.customText;
     dom.soundBtn.setAttribute("aria-pressed", String(state.sound));
-    dom.soundBtn.textContent = state.sound ? "Sound on" : "Sound off";
+    audioSystem.setEnabled(state.sound);
+    updateSoundButton();
     applyTheme();
     normalizeDailyStats();
 }
@@ -292,7 +295,7 @@ function startRound() {
     dom.typingInput.value = "";
     dom.typingInput.focus();
     startTimer();
-    playTone(520, 0.04);
+    audioSystem.playStart();
     renderAll();
 }
 
@@ -365,7 +368,7 @@ function completeRound() {
     store.history = store.history.slice(0, 8);
     saveStore();
 
-    playTone(760, 0.08);
+    audioSystem.playComplete();
     toast(`完成：${result.wpm} WPM，准确率 ${result.accuracy}%`);
     renderAll();
 }
@@ -401,12 +404,17 @@ function handleInput(event) {
             if (actual === expected) {
                 state.combo += 1;
                 state.bestCombo = Math.max(state.bestCombo, state.combo);
-                playTone(620, 0.015, 0.015);
+                audioSystem.playKeystroke();
+
+                // Play combo milestone sounds
+                if (state.combo === 10 || state.combo === 25 || state.combo === 50 || state.combo === 100) {
+                    audioSystem.playComboMilestone(Math.floor(state.combo / 10));
+                }
             } else {
                 state.errors += 1;
                 state.combo = 0;
                 recordWeakKey(expected || actual);
-                playTone(190, 0.04, 0.03);
+                audioSystem.playError();
             }
         }
     }
@@ -536,12 +544,20 @@ function renderKeyboard() {
 
 function renderHistory() {
     if (!store.history.length) {
-        dom.historyList.innerHTML = `<li><span>-</span><strong>暂无成绩</strong><span>完成一轮后记录</span></li>`;
+        dom.historyList.innerHTML = `<li>
+            <div class="history-grade">-</div>
+            <div class="history-wpm">暂无记录</div>
+            <div class="history-meta">完成一轮后显示</div>
+        </li>`;
         return;
     }
     dom.historyList.innerHTML = store.history.map(item => {
         const date = new Date(item.createdAt).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" });
-        return `<li><span>${item.grade}</span><strong>${item.wpm} WPM</strong><span>${item.accuracy}% · ${date}</span></li>`;
+        return `<li>
+            <div class="history-grade">${item.grade}</div>
+            <div class="history-wpm">${item.wpm} WPM</div>
+            <div class="history-meta">${item.accuracy}% · ${date}</div>
+        </li>`;
     }).join("");
 }
 
@@ -635,9 +651,17 @@ function toggleSound() {
     state.sound = !state.sound;
     store.sound = state.sound;
     saveStore();
+    audioSystem.setEnabled(state.sound);
     dom.soundBtn.setAttribute("aria-pressed", String(state.sound));
-    dom.soundBtn.textContent = state.sound ? "Sound on" : "Sound off";
-    playTone(500, 0.04);
+    updateSoundButton();
+    if (state.sound) {
+        audioSystem.playTone(500, 0.1);
+    }
+}
+
+function updateSoundButton() {
+    const icon = state.sound ? "🔊" : "🔇";
+    dom.soundBtn.innerHTML = `<span id="soundIcon">${icon}</span> 音效`;
 }
 
 function cycleTheme() {
@@ -649,25 +673,8 @@ function cycleTheme() {
 }
 
 function applyTheme() {
-    const theme = THEMES[state.themeIndex] || "default";
-    if (theme === "default") {
-        document.documentElement.removeAttribute("data-theme");
-    } else {
-        document.documentElement.dataset.theme = theme;
-    }
-}
-
-function loadStore() {
-    try {
-        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        return { ...defaultStore(), ...parsed };
-    } catch {
-        return defaultStore();
-    }
-}
-
-function saveStore() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    const theme = THEMES[state.themeIndex] || "light";
+    document.documentElement.dataset.theme = theme;
 }
 
 function defaultStore() {
@@ -680,7 +687,7 @@ function defaultStore() {
         dayStreak: 0,
         history: [],
         customText: "",
-        theme: "default",
+        theme: "light",
         sound: true
     };
 }
@@ -721,24 +728,17 @@ function toast(message) {
     toast.timer = window.setTimeout(() => dom.toast.classList.remove("show"), 2200);
 }
 
-function playTone(frequency, duration, volume = 0.02) {
-    if (!state.sound) return;
+function loadStore() {
     try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const context = new AudioContext();
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.frequency.value = frequency;
-        oscillator.type = "sine";
-        gain.gain.value = volume;
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + duration);
-        oscillator.addEventListener("ended", () => context.close());
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return { ...defaultStore(), ...parsed };
     } catch {
-        // Audio feedback is optional.
+        return defaultStore();
     }
+}
+
+function saveStore() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
 function escapeHtml(value) {
