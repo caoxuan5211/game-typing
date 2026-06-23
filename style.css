@@ -299,6 +299,11 @@ header h1 {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    tabindex: -1;  /* 禁止Tab键聚焦按钮 */
+}
+
+.btn:focus {
+    outline: 2px solid transparent;  /* 移除焦点轮廓 */
 }
 
 .btn-primary {
@@ -343,6 +348,11 @@ header h1 {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    tabindex: -1;  /* 禁止Tab键聚焦模式按钮 */
+}
+
+.mode-btn:focus {
+    outline: 2px solid transparent;
 }
 
 .mode-btn:hover {
