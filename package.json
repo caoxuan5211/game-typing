@@ -1,6 +1,6 @@
 {
   "name": "code-typing-game",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "专业的代码打字练习工具",
   "type": "module",
   "scripts": {

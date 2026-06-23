@@ -3,7 +3,7 @@
  * @version 1.0.0
  */
 
-export const VERSION = '1.0.2';
+export const VERSION = '1.0.3';
 
 export const THEMES = {
     purple: {

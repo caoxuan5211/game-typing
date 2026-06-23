@@ -1,7 +1,7 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "buildDate": "2026-06-23",
-  "commit": "5dccac8",
+  "commit": "1fa31c3",
   "features": {
     "modes": ["code", "symbols", "mixed", "custom"],
     "themes": ["purple", "ocean", "sunset", "forest", "midnight", "sakura"],
@@ -36,6 +36,7 @@
     "edge": ">=90"
   },
   "changelog": {
+    "1.0.3": "Change reset shortcut from Ctrl+R to Ctrl+N to avoid browser refresh conflict",
     "1.0.2": "Bug fixes: Tab character validation, Enter key handling, keyboard shortcuts",
     "1.0.1": "Add sakura theme and keyboard shortcuts enhancement",
     "1.0.0": "Initial modular rewrite with 5 themes and achievements"

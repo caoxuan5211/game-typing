@@ -145,8 +145,8 @@ export class TypingGame {
                 }
             }
 
-            // Ctrl/Cmd + R 重置（模拟点击重置按钮）
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            // Ctrl/Cmd + N 重置（模拟点击重置按钮）
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
                 this.elements.resetBtn?.click();
             }
