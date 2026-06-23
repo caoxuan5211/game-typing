@@ -199,6 +199,11 @@ body {
     font-size: 1rem;
 }
 
+.btn-sm {
+    padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 2);
+    font-size: 0.875rem;
+}
+
 .btn-icon {
     transition: transform var(--transition-base);
 }
