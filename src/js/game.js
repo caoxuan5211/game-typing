@@ -128,7 +128,7 @@ export class TypingGame {
                 }
             }
 
-            // Enter 继续/开始（当输入框没有焦点时，或者完成模态框显示时）
+            // Enter 开始/继续
             if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
                 const modalVisible = this.elements.modal?.classList.contains('show');
                 const inputFocused = document.activeElement === this.elements.input;
@@ -139,16 +139,16 @@ export class TypingGame {
                     UIRenderer.hideCompleteModal();
                     this.reset();
                 } else if (!inputFocused && !this.isPlaying) {
-                    // 没有在输入且游戏未开始，Enter开始游戏
+                    // 没有在输入且游戏未开始，Enter开始游戏（模拟点击开始按钮）
                     e.preventDefault();
-                    this.start();
+                    this.elements.startBtn?.click();
                 }
             }
 
-            // Ctrl/Cmd + R 重置
+            // Ctrl/Cmd + R 重置（模拟点击重置按钮）
             if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
                 e.preventDefault();
-                this.reset();
+                this.elements.resetBtn?.click();
             }
         });
     }
