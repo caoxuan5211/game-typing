@@ -106,6 +106,57 @@ function loadNewText() {
     restart();
 }
 
+// 音效系统
+const soundEnabled = true;
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function playKeySound(isCorrect) {
+    if (!soundEnabled) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // 正确按键：清脆的声音
+    if (isCorrect) {
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+    } else {
+        // 错误按键：低沉的声音
+        oscillator.frequency.value = 200;
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    }
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+function playCompleteSound() {
+    if (!soundEnabled) return;
+
+    const times = [0, 0.1, 0.2];
+    const frequencies = [523.25, 659.25, 783.99]; // C, E, G
+
+    times.forEach((time, i) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequencies[i];
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.2);
+
+        oscillator.start(audioContext.currentTime + time);
+        oscillator.stop(audioContext.currentTime + time + 0.2);
+    });
+}
+
 // 重新开始
 function restart() {
     currentIndex = 0;
@@ -117,7 +168,8 @@ function restart() {
     isGameStarted = false;
 
     textInput.value = '';
-    textInput.disabled = true;
+    textInput.disabled = false;  // 修改：默认启用输入框
+    textInput.focus();
     startBtn.textContent = '▶️ 开始 (Enter)';
     startBtn.style.display = 'inline-flex';
 
@@ -202,10 +254,24 @@ function renderText() {
 
 // 处理输入
 function handleInput(e) {
+    // 如果还没开始游戏，自动开始
+    if (!isGameActive && !isGameStarted) {
+        startGame();
+    }
+
     if (!isGameActive) return;
 
     const inputValue = textInput.value;
-    currentIndex = inputValue.length;
+    const newIndex = inputValue.length;
+
+    // 播放音效（只在新字符输入时）
+    if (newIndex > currentIndex) {
+        const lastChar = inputValue[newIndex - 1];
+        const expectedChar = currentText[newIndex - 1];
+        playKeySound(lastChar === expectedChar);
+    }
+
+    currentIndex = newIndex;
 
     // 计算统计数据
     totalChars = currentIndex;
@@ -260,6 +326,8 @@ function endGame() {
     isGameActive = false;
     clearInterval(timerInterval);
     textInput.disabled = true;
+
+    playCompleteSound(); // 播放完成音效
 
     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
     const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
