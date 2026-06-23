@@ -1,18 +1,18 @@
 // 游戏状态
 let currentMode = 'code';
 let currentText = '';
+let currentIndex = 0;
 let startTime = null;
 let timerInterval = null;
+let totalChars = 0;
 let correctChars = 0;
 let errorChars = 0;
 let isGameActive = false;
 let isGameStarted = false;
 
-// Monaco编辑器实例
-let targetEditor = null;
-let inputEditor = null;
-
 // DOM 元素
+const codeDisplay = document.getElementById('codeDisplay');
+const textInput = document.getElementById('textInput');
 const wpmValue = document.getElementById('wpm-value');
 const accuracyDisplay = document.getElementById('accuracy');
 const timerDisplay = document.getElementById('timer');
@@ -27,95 +27,6 @@ const modalRestartBtn = document.getElementById('modalRestartBtn');
 const modalNextBtn = document.getElementById('modalNextBtn');
 const modeBtns = document.querySelectorAll('.mode-btn');
 
-// 音效系统
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-function playKeySound(isCorrect) {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    if (isCorrect) {
-        oscillator.frequency.value = 800;
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-    } else {
-        oscillator.frequency.value = 200;
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    }
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-}
-
-function playCompleteSound() {
-    const times = [0, 0.1, 0.2];
-    const frequencies = [523.25, 659.25, 783.99];
-
-    times.forEach((time, i) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.frequency.value = frequencies[i];
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.2);
-        oscillator.start(audioContext.currentTime + time);
-        oscillator.stop(audioContext.currentTime + time + 0.2);
-    });
-}
-
-// 初始化Monaco Editor
-require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
-
-require(['vs/editor/editor.main'], function () {
-    // 目标代码编辑器（只读）
-    targetEditor = monaco.editor.create(document.getElementById('targetEditor'), {
-        value: '',
-        language: 'javascript',
-        theme: 'vs',
-        readOnly: true,
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
-        fontSize: 14,
-        lineNumbers: 'on',
-        automaticLayout: true
-    });
-
-    // 输入编辑器
-    inputEditor = monaco.editor.create(document.getElementById('inputEditor'), {
-        value: '',
-        language: 'javascript',
-        theme: 'vs-dark',
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
-        fontSize: 14,
-        lineNumbers: 'on',
-        automaticLayout: true,
-        tabSize: 4,
-        insertSpaces: true
-    });
-
-    // 监听输入变化
-    inputEditor.onDidChangeModelContent((e) => {
-        if (isGameActive) {
-            handleInput();
-        }
-    });
-
-    // 监听键盘事件（用于自动开始）
-    inputEditor.onDidFocusEditorText(() => {
-        if (!isGameStarted && inputEditor.getValue().length === 0) {
-            inputEditor.setValue('');
-        }
-    });
-
-    // 初始化
-    init();
-});
-
 // 初始化
 function init() {
     loadNewText();
@@ -124,6 +35,33 @@ function init() {
 
 // 设置事件监听
 function setupEventListeners() {
+    textInput.addEventListener('input', handleInput);
+    textInput.addEventListener('paste', (e) => e.preventDefault());
+
+    // 处理Tab键 - 插入缩进而不是切换焦点
+    textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const start = textInput.selectionStart;
+            const end = textInput.selectionEnd;
+            const value = textInput.value;
+
+            // 插入4个空格作为缩进
+            const indent = '    ';
+            textInput.value = value.substring(0, start) + indent + value.substring(end);
+
+            // 将光标移到插入的缩进后面
+            textInput.selectionStart = textInput.selectionEnd = start + indent.length;
+
+            // 触发input事件以更新显示
+            textInput.dispatchEvent(new Event('input'));
+
+            return false;
+        }
+    });
+
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', restart);
 
@@ -148,7 +86,7 @@ function setupEventListeners() {
 
     // 键盘快捷键
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !isGameStarted && document.activeElement !== inputEditor) {
+        if (e.key === 'Enter' && !isGameStarted && document.activeElement !== textInput) {
             e.preventDefault();
             startGame();
         }
@@ -161,6 +99,7 @@ function setupEventListeners() {
         }
     });
 
+    // 点击模态框外部关闭
     resultModal.addEventListener('click', (e) => {
         if (e.target === resultModal) {
             hideModal();
@@ -191,20 +130,70 @@ function loadNewText() {
     restart();
 }
 
+// 音效系统
+const soundEnabled = true;
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function playKeySound(isCorrect) {
+    if (!soundEnabled) return;
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // 正确按键：清脆的声音
+    if (isCorrect) {
+        oscillator.frequency.value = 800;
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+    } else {
+        // 错误按键：低沉的声音
+        oscillator.frequency.value = 200;
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    }
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+}
+
+function playCompleteSound() {
+    if (!soundEnabled) return;
+
+    const times = [0, 0.1, 0.2];
+    const frequencies = [523.25, 659.25, 783.99]; // C, E, G
+
+    times.forEach((time, i) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequencies[i];
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime + time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.2);
+
+        oscillator.start(audioContext.currentTime + time);
+        oscillator.stop(audioContext.currentTime + time + 0.2);
+    });
+}
+
 // 重新开始
 function restart() {
+    currentIndex = 0;
+    totalChars = 0;
     correctChars = 0;
     errorChars = 0;
     startTime = null;
     isGameActive = false;
     isGameStarted = false;
 
-    if (targetEditor && inputEditor) {
-        targetEditor.setValue(currentText);
-        inputEditor.setValue('');
-        inputEditor.updateOptions({ readOnly: false });
-    }
-
+    textInput.value = '';
+    textInput.disabled = false;  // 修改：默认启用输入框
+    textInput.focus();
     startBtn.textContent = '▶️ 开始 (Enter)';
     startBtn.style.display = 'inline-flex';
 
@@ -216,16 +205,19 @@ function restart() {
     errorCountDisplay.textContent = '0';
     progressText.textContent = `0 / ${currentText.length}`;
     progressFill.style.width = '0%';
+
+    renderText();
 }
 
 // 开始游戏
 function startGame() {
-    if (isGameStarted || !inputEditor) return;
+    if (isGameStarted) return;
 
     isGameStarted = true;
     isGameActive = true;
     startTime = Date.now();
-    inputEditor.focus();
+    textInput.disabled = false;
+    textInput.focus();
     startBtn.style.display = 'none';
 
     timerInterval = setInterval(() => {
@@ -234,19 +226,79 @@ function startGame() {
     }, 100);
 }
 
-// 处理输入
-function handleInput() {
-    if (!isGameActive) {
-        if (!isGameStarted) {
-            startGame();
+// 渲染文本显示
+function renderText() {
+    codeDisplay.innerHTML = '';
+
+    const lines = currentText.split('\n');
+
+    lines.forEach((line, lineIndex) => {
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'code-line';
+
+        const lineNumber = document.createElement('span');
+        lineNumber.className = 'line-number';
+        lineNumber.textContent = lineIndex + 1;
+
+        const lineContent = document.createElement('span');
+        lineContent.className = 'line-content';
+
+        let charOffset = lines.slice(0, lineIndex).reduce((sum, l) => sum + l.length + 1, 0);
+
+        for (let i = 0; i < line.length; i++) {
+            const globalIndex = charOffset + i;
+            const char = line[i];
+            const span = document.createElement('span');
+
+            if (char === ' ') {
+                span.innerHTML = '&nbsp;';
+            } else {
+                span.textContent = char;
+            }
+
+            if (globalIndex < currentIndex) {
+                const inputChar = textInput.value[globalIndex];
+                if (inputChar === char) {
+                    span.classList.add('char-correct');
+                } else {
+                    span.classList.add('char-incorrect');
+                }
+            } else if (globalIndex === currentIndex) {
+                span.classList.add('char-current');
+            }
+
+            lineContent.appendChild(span);
         }
-        return;
+
+        lineDiv.appendChild(lineNumber);
+        lineDiv.appendChild(lineContent);
+        codeDisplay.appendChild(lineDiv);
+    });
+}
+
+// 处理输入
+function handleInput(e) {
+    // 如果还没开始游戏，自动开始
+    if (!isGameActive && !isGameStarted) {
+        startGame();
     }
 
-    const inputValue = inputEditor.getValue();
-    const currentIndex = inputValue.length;
+    if (!isGameActive) return;
 
-    // 计算统计
+    const inputValue = textInput.value;
+    const newIndex = inputValue.length;
+
+    // 播放音效（只在新字符输入时）
+    if (newIndex > currentIndex) {
+        const lastChar = inputValue[newIndex - 1];
+        const expectedChar = currentText[newIndex - 1];
+        playKeySound(lastChar === expectedChar);
+    }
+
+    currentIndex = newIndex;
+
+    // 计算统计数据
+    totalChars = currentIndex;
     correctChars = 0;
     errorChars = 0;
 
@@ -258,16 +310,10 @@ function handleInput() {
         }
     }
 
-    // 播放音效
-    if (currentIndex > 0) {
-        const lastChar = inputValue[currentIndex - 1];
-        const expectedChar = currentText[currentIndex - 1];
-        playKeySound(lastChar === expectedChar);
-    }
-
+    renderText();
     updateStats();
 
-    // 检查完成
+    // 检查是否完成
     if (currentIndex >= currentText.length && inputValue === currentText) {
         endGame();
     }
@@ -275,6 +321,7 @@ function handleInput() {
 
 // 更新统计
 function updateStats() {
+    // 计算 WPM
     if (startTime) {
         const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
         const words = correctChars / 5;
@@ -282,33 +329,37 @@ function updateStats() {
         wpmValue.textContent = wpm;
     }
 
-    const totalChars = correctChars + errorChars;
-    const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+    // 计算准确率
+    const accuracy = totalChars > 0
+        ? Math.round((correctChars / totalChars) * 100)
+        : 100;
     accuracyDisplay.textContent = `${accuracy}%`;
 
+    // 更新计数
     correctCountDisplay.textContent = correctChars;
     errorCountDisplay.textContent = errorChars;
 
-    const progress = Math.round((correctChars / currentText.length) * 100);
-    progressFill.style.width = `${Math.min(progress, 100)}%`;
-    progressText.textContent = `${correctChars} / ${currentText.length}`;
+    // 更新进度
+    const progress = Math.round((currentIndex / currentText.length) * 100);
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${currentIndex} / ${currentText.length}`;
 }
 
 // 结束游戏
 function endGame() {
     isGameActive = false;
     clearInterval(timerInterval);
-    inputEditor.updateOptions({ readOnly: true });
+    textInput.disabled = true;
 
-    playCompleteSound();
+    playCompleteSound(); // 播放完成音效
 
     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
     const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
     const words = correctChars / 5;
     const wpm = Math.round(words / elapsedMinutes) || 0;
-    const totalChars = correctChars + errorChars;
     const accuracy = Math.round((correctChars / totalChars) * 100);
 
+    // 显示结果
     document.getElementById('finalWpm').textContent = `${wpm} WPM`;
     document.getElementById('finalAccuracy').textContent = `${accuracy}%`;
     document.getElementById('finalTime').textContent = `${elapsedSeconds}s`;
@@ -325,3 +376,6 @@ function showModal() {
 function hideModal() {
     resultModal.classList.remove('show');
 }
+
+// 启动应用
+init();
