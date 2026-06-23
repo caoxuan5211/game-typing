@@ -41,9 +41,13 @@ export class ModalManager {
             this.modals.theme.closeBtn?.addEventListener('click', () => this.hide('theme'));
 
             // 主题选择
-            document.querySelectorAll('.theme-btn').forEach(btn => {
+            const themeBtns = document.querySelectorAll('.theme-btn');
+            console.log(`[ModalManager] 找到 ${themeBtns.length} 个主题按钮`);
+            themeBtns.forEach((btn, index) => {
+                console.log(`[ModalManager] 注册主题按钮 #${index}: ${btn.dataset.theme}`);
                 btn.addEventListener('click', (e) => {
                     const theme = e.currentTarget.dataset.theme;
+                    console.log(`[ModalManager] 主题按钮被点击: ${theme}`);
                     this.selectTheme(theme);
                 });
             });

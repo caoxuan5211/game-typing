@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>测试Enter键</title>
+</head>
+<body>
+    <h1>测试Enter键和主题切换</h1>
+    <button id="startBtn">开始练习</button>
+    <button id="themeBtn" data-theme="sakura">切换主题</button>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        // 测试按钮点击
+        document.getElementById('startBtn').addEventListener('click', () => {
+            output.innerHTML += '<p>✅ 开始按钮被点击</p>';
+        });
+        
+        document.getElementById('themeBtn').addEventListener('click', (e) => {
+            output.innerHTML += `<p>✅ 主题按钮被点击: ${e.currentTarget.dataset.theme}</p>`;
+        });
+        
+        // 测试Enter键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                output.innerHTML += '<p>🔵 Enter键被按下</p>';
+                document.getElementById('startBtn').click();
+            }
+        });
+        
+        output.innerHTML = '<p>准备就绪，按Enter或点击按钮</p>';
+    </script>
+</body>
+</html>

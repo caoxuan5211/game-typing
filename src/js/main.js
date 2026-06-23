@@ -41,11 +41,11 @@ function init() {
     });
 
     // 暴露到全局（用于调试）
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        window.__TYPING_GAME__ = game;
-        window.__MODAL_MANAGER__ = ModalManager;
-        console.log('%c🛠️ 调试模式已启用', 'color: #f59e0b; font-size: 12px;');
-    }
+    window.__TYPING_GAME__ = game;
+    window.__MODAL_MANAGER__ = ModalManager;
+    console.log('%c🛠️ 调试模式已启用', 'color: #f59e0b; font-size: 12px;');
+    console.log('%c游戏实例已创建', 'color: #0f0; font-size: 12px;');
+    console.log('%c模态管理器已加载', 'color: #0f0; font-size: 12px;');
 
     // 性能监控
     if (window.performance && window.performance.timing) {

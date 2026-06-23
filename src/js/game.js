@@ -128,16 +128,21 @@ export class TypingGame {
                 const modalVisible = this.elements.modal?.classList.contains('show');
                 const inputFocused = document.activeElement === this.elements.input;
 
+                console.log(`[Game] Enter键被按下 - modal可见:${modalVisible}, input聚焦:${inputFocused}, 游戏中:${this.isPlaying}`);
+
                 if (modalVisible) {
                     // 完成模态框显示时，Enter继续
                     e.preventDefault();
+                    console.log('[Game] 关闭完成模态框并重置');
                     UIRenderer.hideCompleteModal();
                     this.reset();
                 } else if (!inputFocused && !this.isPlaying) {
                     // 没有在输入且游戏未开始，Enter开始游戏（模拟点击开始按钮）
                     e.preventDefault();
                     const startBtn = document.getElementById('startBtn');
+                    console.log(`[Game] 尝试启动游戏 - 按钮存在:${!!startBtn}, 禁用:${startBtn?.disabled}`);
                     if (startBtn && !startBtn.disabled) {
+                        console.log('[Game] 点击开始按钮');
                         startBtn.click();
                     }
                 }
@@ -146,6 +151,7 @@ export class TypingGame {
             // Alt + R 重置（模拟点击重置按钮）
             if (e.altKey && e.key === 'r') {
                 e.preventDefault();
+                console.log('[Game] Alt+R被按下，触发重置');
                 this.elements.resetBtn?.click();
             }
         });
