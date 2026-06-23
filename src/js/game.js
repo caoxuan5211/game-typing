@@ -128,14 +128,20 @@ export class TypingGame {
                 }
             }
 
-            // Enter 继续/开始（当输入框没有焦点时）
-            if (e.key === 'Enter' && document.activeElement !== this.elements.input) {
-                e.preventDefault();
-                if (!this.isPlaying) {
-                    this.start();
-                } else if (this.elements.modal?.classList.contains('show')) {
+            // Enter 继续/开始（当输入框没有焦点时，或者完成模态框显示时）
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+                const modalVisible = this.elements.modal?.classList.contains('show');
+                const inputFocused = document.activeElement === this.elements.input;
+
+                if (modalVisible) {
+                    // 完成模态框显示时，Enter继续
+                    e.preventDefault();
                     UIRenderer.hideCompleteModal();
                     this.reset();
+                } else if (!inputFocused && !this.isPlaying) {
+                    // 没有在输入且游戏未开始，Enter开始游戏
+                    e.preventDefault();
+                    this.start();
                 }
             }
 
