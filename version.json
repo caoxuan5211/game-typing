@@ -1,10 +1,10 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.2",
   "buildDate": "2026-06-23",
-  "commit": "785f5fb",
+  "commit": "5dccac8",
   "features": {
     "modes": ["code", "symbols", "mixed", "custom"],
-    "themes": ["purple", "ocean", "sunset", "forest", "midnight"],
+    "themes": ["purple", "ocean", "sunset", "forest", "midnight", "sakura"],
     "achievements": 5,
     "practiceTexts": 60,
     "soundEffects": true,
@@ -23,7 +23,7 @@
     "main": "Application entry point"
   },
   "metrics": {
-    "totalLines": 3449,
+    "totalLines": 3500,
     "modules": 12,
     "components": 9,
     "cssFiles": 3,
@@ -34,5 +34,10 @@
     "firefox": ">=88",
     "safari": ">=14",
     "edge": ">=90"
+  },
+  "changelog": {
+    "1.0.2": "Bug fixes: Tab character validation, Enter key handling, keyboard shortcuts",
+    "1.0.1": "Add sakura theme and keyboard shortcuts enhancement",
+    "1.0.0": "Initial modular rewrite with 5 themes and achievements"
   }
 }
