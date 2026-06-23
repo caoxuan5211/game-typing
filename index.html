@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Typing - 代码打字练习</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Code Typing</h1>
+            <p class="subtitle">提升你的代码输入速度</p>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-label">WPM</span>
+                <span class="stat-value" id="wpm">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">准确率</span>
+                <span class="stat-value" id="accuracy">100%</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">时间</span>
+                <span class="stat-value" id="timer">0s</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">模式</span>
+                <span class="stat-value" id="mode-display">代码片段</span>
+            </div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="code">代码片段</button>
+            <button class="mode-btn" data-mode="symbols">符号练习</button>
+            <button class="mode-btn" data-mode="mixed">混合模式</button>
+        </div>
+
+        <div class="typing-area">
+            <div class="text-display" id="textDisplay"></div>
+            <textarea
+                id="textInput"
+                class="text-input"
+                placeholder="点击这里开始打字..."
+                spellcheck="false"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+            ></textarea>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="restartBtn">重新开始</button>
+            <button class="btn btn-secondary" id="nextBtn">下一题</button>
+        </div>
+
+        <div class="result-modal" id="resultModal">
+            <div class="modal-content">
+                <h2>完成！</h2>
+                <div class="result-stats">
+                    <div class="result-item">
+                        <span class="result-label">速度</span>
+                        <span class="result-value" id="finalWpm">0 WPM</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">准确率</span>
+                        <span class="result-value" id="finalAccuracy">100%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">用时</span>
+                        <span class="result-value" id="finalTime">0s</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="modalRestartBtn">再来一次</button>
+                    <button class="btn btn-secondary" id="modalNextBtn">下一题</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="texts.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
