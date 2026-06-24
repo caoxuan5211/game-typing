@@ -7,6 +7,41 @@
     min-height: calc(100vh - 73px);
 }
 
+.stats-container.gated {
+    filter: blur(1.5px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.stats-auth-gate {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--spacing-unit) * 4);
+    z-index: 600;
+    transform: translateX(-50%);
+    width: min(560px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing-unit) * 2);
+    padding: calc(var(--spacing-unit) * 2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-xl);
+}
+
+.stats-auth-gate strong,
+.stats-auth-gate span {
+    display: block;
+}
+
+.stats-auth-gate span {
+    margin-top: 2px;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
 .stats-header {
     margin-bottom: calc(var(--spacing-unit) * 6);
 }

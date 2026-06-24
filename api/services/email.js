@@ -95,7 +95,7 @@ async function sendVerificationCode(email, code) {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>⚡ Code Typing Lab</h1>
+                        <h1>Code Typing Lab</h1>
                     </div>
                     <div class="content">
                         <h2 style="color: #111827; margin-bottom: 20px;">登录验证码</h2>

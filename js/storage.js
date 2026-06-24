@@ -3,10 +3,28 @@
  */
 
 const STORAGE_KEY = 'code_typing_lab_v3';
+const GUEST_STORAGE_KEY = 'code_typing_lab_guest_session';
+const AUTH_MODE_KEY = 'code_typing_auth_mode';
+
+export function isGuestMode() {
+    return localStorage.getItem(AUTH_MODE_KEY) === 'guest';
+}
+
+export function setGuestMode(enabled) {
+    if (enabled) {
+        localStorage.setItem(AUTH_MODE_KEY, 'guest');
+        sessionStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(getDefaultStore()));
+    } else {
+        localStorage.removeItem(AUTH_MODE_KEY);
+        sessionStorage.removeItem(GUEST_STORAGE_KEY);
+    }
+}
 
 export function loadStore() {
     try {
-        const data = localStorage.getItem(STORAGE_KEY);
+        const data = isGuestMode()
+            ? sessionStorage.getItem(GUEST_STORAGE_KEY)
+            : localStorage.getItem(STORAGE_KEY);
         if (data) {
             return { ...getDefaultStore(), ...JSON.parse(data) };
         }
@@ -18,7 +36,9 @@ export function loadStore() {
 
 export function saveStore(store) {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+        const target = isGuestMode() ? sessionStorage : localStorage;
+        const key = isGuestMode() ? GUEST_STORAGE_KEY : STORAGE_KEY;
+        target.setItem(key, JSON.stringify(store));
     } catch (error) {
         console.warn('Failed to save store:', error);
     }

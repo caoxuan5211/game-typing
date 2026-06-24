@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-2';
+import { syncLocalStore } from './shell.js?v=20260624-3';
 
 // 代码片段数据
 const snippets = {
@@ -45,6 +45,31 @@ const snippets = {
 \t}
 \treturn response.json();
 }`
+        },
+        {
+            title: "事件委托",
+            language: "javascript",
+            text: `document.addEventListener('click', event => {
+\tconst button = event.target.closest('[data-action]');
+\tif (!button) return;
+\thandleAction(button.dataset.action);
+});`
+        },
+        {
+            title: "Map 缓存",
+            language: "javascript",
+            text: `const cache = new Map();
+function remember(key, factory) {
+\tif (!cache.has(key)) cache.set(key, factory());
+\treturn cache.get(key);
+}`
+        },
+        {
+            title: "Promise 并发",
+            language: "javascript",
+            text: `const results = await Promise.allSettled(tasks.map(task => task()));
+const failed = results.filter(item => item.status === 'rejected');
+if (failed.length > 0) reportFailures(failed);`
         }
     ],
     cpp: [
@@ -79,6 +104,36 @@ T clampValue(T value, T low, T high) {
 \t}
 \treturn nullptr;
 }`
+        },
+        {
+            title: "CPP unordered_map",
+            language: "cpp",
+            text: `unordered_map<string, int> countWords(const vector<string>& words) {
+\tunordered_map<string, int> counts;
+\tfor (const auto& word : words) {
+\t\tcounts[word] += 1;
+\t}
+\treturn counts;
+}`
+        },
+        {
+            title: "CPP lambda 排序",
+            language: "cpp",
+            text: `sort(users.begin(), users.end(), [](const User& a, const User& b) {
+\tif (a.score != b.score) return a.score > b.score;
+\treturn a.name < b.name;
+});`
+        },
+        {
+            title: "CPP RAII",
+            language: "cpp",
+            text: `class Timer {
+public:
+\texplicit Timer(string label) : label_(move(label)) {}
+\t~Timer() { cout << label_ << " done\\n"; }
+private:
+\tstring label_;
+};`
         }
     ],
     html: [
@@ -109,6 +164,35 @@ T clampValue(T value, T low, T high) {
 \t<a href="/stats">Stats</a>
 \t<a href="/profile">Profile</a>
 </nav>`
+        },
+        {
+            title: "HTML 对话框",
+            language: "html",
+            text: `<dialog id="confirmDialog">
+\t<form method="dialog">
+\t\t<p>Delete this record?</p>
+\t\t<button value="cancel">Cancel</button>
+\t\t<button value="confirm">Confirm</button>
+\t</form>
+</dialog>`
+        },
+        {
+            title: "HTML 表格",
+            language: "html",
+            text: `<table>
+\t<thead><tr><th>Name</th><th>WPM</th></tr></thead>
+\t<tbody>
+\t\t<tr><td>Ada</td><td>96</td></tr>
+\t</tbody>
+</table>`
+        },
+        {
+            title: "HTML 图片",
+            language: "html",
+            text: `<figure>
+\t<img src="/assets/chart.png" alt="Weekly typing progress">
+\t<figcaption>Practice volume by day</figcaption>
+</figure>`
         }
     ],
     sql: [
@@ -137,6 +221,28 @@ HAVING runs >= 3;`
 SET total_runs = total_runs + 1,
 \tbest_wpm = MAX(best_wpm, 92)
 WHERE user_id = ?;`
+        },
+        {
+            title: "SQL Join",
+            language: "sql",
+            text: `SELECT u.email, s.best_wpm, s.day_streak
+FROM users AS u
+INNER JOIN user_stats AS s ON s.user_id = u.id
+WHERE u.is_active = 1;`
+        },
+        {
+            title: "SQL 插入记录",
+            language: "sql",
+            text: `INSERT INTO training_sessions
+(user_id, wpm, accuracy, time, mode, chars, grade)
+VALUES (?, ?, ?, ?, ?, ?, ?);`
+        },
+        {
+            title: "SQL 清理验证码",
+            language: "sql",
+            text: `DELETE FROM verification_codes
+WHERE used = 1
+\tOR expires_at < datetime('now', '-1 day');`
         }
     ]
 };
@@ -200,6 +306,8 @@ const dom = {
     themeToggle: document.getElementById('themeToggle'),
     customModal: document.getElementById('customModal'),
     customText: document.getElementById('customText'),
+    resourceUrl: document.getElementById('resourceUrl'),
+    fetchResourceBtn: document.getElementById('fetchResourceBtn'),
     editCustomBtn: document.getElementById('editCustomBtn'),
     saveCustom: document.getElementById('saveCustom'),
     cancelCustom: document.getElementById('cancelCustom'),
@@ -272,6 +380,7 @@ function bindEvents() {
     dom.cancelCustom.addEventListener('click', closeCustomModal);
     dom.closeModal.addEventListener('click', closeCustomModal);
     dom.editCustomBtn.addEventListener('click', openCustomModal);
+    dom.fetchResourceBtn.addEventListener('click', fetchResourceText);
 
     // 代码区域点击聚焦
     dom.codeDisplay.addEventListener('click', () => {
@@ -367,6 +476,30 @@ function saveCustomText() {
     closeCustomModal();
     setCategory('custom');
     showToast('自定义文本已保存');
+}
+
+async function fetchResourceText() {
+    const url = dom.resourceUrl.value.trim();
+    if (!/^https?:\/\//i.test(url)) {
+        showToast('请输入有效的 http/https 地址');
+        return;
+    }
+
+    dom.fetchResourceBtn.disabled = true;
+    dom.fetchResourceBtn.textContent = '导入中';
+    try {
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = (await response.text()).replace(/\r\n/g, '\n').slice(0, 12000);
+        if (!text.trim()) throw new Error('资源内容为空');
+        dom.customText.value = text;
+        showToast('资源已导入，可编辑后保存');
+    } catch (error) {
+        showToast('导入失败，请确认资源允许跨域或手动粘贴');
+    } finally {
+        dom.fetchResourceBtn.disabled = false;
+        dom.fetchResourceBtn.textContent = '从 URL 导入';
+    }
 }
 
 // 音效和主题

@@ -4,25 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>统计 - Code Typing Lab</title>
-    <link rel="stylesheet" href="css/common.css?v=20260624-2">
-    <link rel="stylesheet" href="css/stats.css?v=20260624-2">
+    <link rel="icon" href="/assets/favicon.svg?v=20260624-3" type="image/svg+xml">
+    <link rel="stylesheet" href="css/common.css?v=20260624-3">
+    <link rel="stylesheet" href="css/stats.css?v=20260624-3">
 </head>
 <body>
     <div class="app">
         <!-- 导航栏 -->
         <nav class="nav">
             <div class="nav-brand">
-                <span class="nav-icon">⚡</span>
+                <span class="nav-icon">CT</span>
                 <span class="nav-title">Code Typing Lab</span>
             </div>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">首页</a>
-                <a href="train.html" class="nav-link">训练</a>
-                <a href="stats.html" class="nav-link active">统计</a>
-                <a href="profile.html" class="nav-link">个人</a>
+                <a href="/" class="nav-link">首页</a>
+                <a href="/train" class="nav-link">训练</a>
+                <a href="/stats" class="nav-link active">统计</a>
+                <a href="/profile" class="nav-link">个人</a>
             </div>
             <div class="nav-actions">
-                <a href="login.html" class="btn btn-primary btn-sm">登录</a>
+                <a href="/login" class="btn btn-primary btn-sm">登录</a>
                 <button class="icon-btn" id="soundToggle" title="音效">🔊</button>
                 <button class="icon-btn" id="themeToggle" title="主题">🌙</button>
             </div>
@@ -87,7 +88,7 @@
                         <div class="empty-state">
                             <div class="empty-icon">📝</div>
                             <p>暂无训练记录</p>
-                            <a href="train.html" class="btn btn-primary">开始训练</a>
+                            <a href="/train" class="btn btn-primary">开始训练</a>
                         </div>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
     <!-- Toast 通知 -->
     <div class="toast" id="toast"></div>
 
-    <script type="module" src="js/shell.js?v=20260624-2"></script>
-    <script type="module" src="js/stats.js?v=20260624-2"></script>
+    <script type="module" src="js/shell.js?v=20260624-3"></script>
+    <script type="module" src="js/stats.js?v=20260624-3"></script>
 </body>
 </html>

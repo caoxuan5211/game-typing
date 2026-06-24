@@ -263,7 +263,15 @@
 }
 
 .footer-icon {
-    font-size: 1.5rem;
+    width: 24px;
+    height: 24px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 7px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.6875rem;
+    font-weight: 900;
 }
 
 .footer-desc {

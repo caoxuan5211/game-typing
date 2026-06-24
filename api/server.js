@@ -31,7 +31,7 @@ app.use(cors({
     },
     credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // 限流
 const limiter = rateLimit({

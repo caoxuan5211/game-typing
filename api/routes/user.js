@@ -7,6 +7,69 @@ const router = express.Router();
 // 所有路由都需要认证
 router.use(authenticateToken);
 
+function getPublicUser(user) {
+    return {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name || user.email.split('@')[0],
+        avatar: user.avatar || ''
+    };
+}
+
+/**
+ * GET /api/user/profile
+ * 获取个人资料
+ */
+router.get('/profile', (req, res) => {
+    try {
+        const db = getDb();
+        const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ error: '用户不存在' });
+        }
+        res.json({ user: getPublicUser(user) });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ error: '获取个人资料失败' });
+    }
+});
+
+/**
+ * PATCH /api/user/profile
+ * 更新昵称和头像
+ */
+router.patch('/profile', (req, res) => {
+    try {
+        const displayName = String(req.body.displayName || '').trim().replace(/\s+/g, ' ').slice(0, 32);
+        const avatar = String(req.body.avatar || '').trim();
+
+        if (!displayName) {
+            return res.status(400).json({ error: '昵称不能为空' });
+        }
+
+        if (avatar && avatar.length > 600000) {
+            return res.status(400).json({ error: '头像文件过大' });
+        }
+
+        if (avatar && !/^data:image\/(png|jpeg|webp);base64,/.test(avatar)) {
+            return res.status(400).json({ error: '头像格式仅支持 PNG/JPEG/WebP' });
+        }
+
+        const db = getDb();
+        db.prepare(`
+            UPDATE users
+            SET display_name = ?, avatar = ?
+            WHERE id = ?
+        `).run(displayName, avatar, req.user.userId);
+
+        const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user.userId);
+        res.json({ success: true, user: getPublicUser(user) });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: '更新个人资料失败' });
+    }
+});
+
 /**
  * GET /api/user/stats
  * 获取用户统计数据

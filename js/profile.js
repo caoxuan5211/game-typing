@@ -1,14 +1,19 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { getAuthState, initNavAuth, syncLocalStore } from './shell.js?v=20260624-2';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore } from './shell.js?v=20260624-3';
 
 let store = loadStore();
+let avatarData = '';
 
 const dom = {
     accountPill: document.getElementById('accountPill'),
     avatar: document.getElementById('avatar'),
     accountName: document.getElementById('accountName'),
     accountEmail: document.getElementById('accountEmail'),
+    profileEdit: document.getElementById('profileEdit'),
+    displayNameInput: document.getElementById('displayNameInput'),
+    avatarInput: document.getElementById('avatarInput'),
+    saveProfileBtn: document.getElementById('saveProfileBtn'),
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
     dailyGoal: document.getElementById('dailyGoal'),
@@ -64,6 +69,12 @@ function bindEvents() {
         saveAndRender('主题已保存');
     });
     dom.logoutBtn.addEventListener('click', logout);
+    dom.loginBtn.addEventListener('click', event => {
+        event.preventDefault();
+        openAuthModal('login');
+    });
+    dom.avatarInput.addEventListener('change', handleAvatarFile);
+    dom.saveProfileBtn.addEventListener('click', saveProfile);
     dom.syncBtn.addEventListener('click', syncNow);
     dom.exportBtn.addEventListener('click', exportData);
     dom.importInput.addEventListener('change', importData);
@@ -83,7 +94,7 @@ function saveAndRender(message) {
 }
 
 function render() {
-    const { token, email } = getAuthState();
+    const { token, email, user, guest } = getAuthState();
     const theme = store.theme || 'light';
 
     document.documentElement.setAttribute('data-theme', theme);
@@ -91,12 +102,17 @@ function render() {
     dom.soundToggle.textContent = store.sound ? '🔊' : '🔇';
     audioSystem.setEnabled(store.sound);
 
-    dom.accountPill.textContent = token ? '已登录' : '本地模式';
-    dom.accountName.textContent = token ? (email.split('@')[0] || '已登录用户') : '本地用户';
-    dom.accountEmail.textContent = token ? email : '未登录，数据仅保存在当前浏览器';
-    dom.avatar.textContent = (email || 'U').slice(0, 1).toUpperCase();
+    const name = user?.displayName || email.split('@')[0] || (guest ? '游客' : '本地用户');
+    avatarData = user?.avatar || avatarData || '';
+
+    dom.accountPill.textContent = token ? '已登录' : (guest ? '游客模式' : '本地模式');
+    dom.accountName.textContent = name;
+    dom.accountEmail.textContent = token ? email : (guest ? '游客数据仅保留本次会话' : '未登录，数据仅保存在当前浏览器');
+    dom.avatar.innerHTML = avatarData ? `<img src="${avatarData}" alt="">` : name.slice(0, 1).toUpperCase();
     dom.loginBtn.hidden = Boolean(token);
     dom.logoutBtn.hidden = !token;
+    dom.profileEdit.hidden = !token;
+    dom.displayNameInput.value = user?.displayName || '';
 
     dom.dailyGoal.value = store.dailyGoal || 1200;
     dom.codeFontSize.value = store.codeFontSize || 24;
@@ -116,10 +132,80 @@ function render() {
 }
 
 function logout() {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_email');
+    clearAuthSession();
     render();
     showToast('已退出登录，本地数据仍保留');
+}
+
+async function handleAvatarFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        showToast('头像仅支持 PNG/JPEG/WebP');
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('头像文件请小于 2MB');
+        return;
+    }
+
+    avatarData = await resizeAvatar(file);
+    dom.avatar.innerHTML = `<img src="${avatarData}" alt="">`;
+}
+
+async function saveProfile() {
+    const { token } = getAuthState();
+    if (!token) {
+        openAuthModal('login');
+        return;
+    }
+
+    const displayName = dom.displayNameInput.value.trim();
+    if (!displayName) {
+        showToast('账户名不能为空');
+        return;
+    }
+
+    dom.saveProfileBtn.disabled = true;
+    dom.saveProfileBtn.textContent = '保存中';
+    try {
+        const data = await apiRequest('/user/profile', {
+            method: 'PATCH',
+            body: { displayName, avatar: avatarData }
+        });
+        localStorage.setItem('user_profile', JSON.stringify(data.user));
+        initNavAuth();
+        render();
+        showToast('资料已保存');
+    } catch (error) {
+        showToast(error.message || '保存失败');
+    } finally {
+        dom.saveProfileBtn.disabled = false;
+        dom.saveProfileBtn.textContent = '保存资料';
+    }
+}
+
+function resizeAvatar(file) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            const size = 160;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const scale = Math.max(size / image.width, size / image.height);
+            const width = image.width * scale;
+            const height = image.height * scale;
+            ctx.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+            URL.revokeObjectURL(image.src);
+            resolve(canvas.toDataURL('image/webp', 0.82));
+        };
+        image.onerror = reject;
+        image.src = URL.createObjectURL(file);
+    });
 }
 
 async function syncNow() {

@@ -13,11 +13,17 @@ function init() {
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
+            password_hash TEXT,
+            display_name TEXT,
+            avatar TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_login DATETIME,
             is_active INTEGER DEFAULT 1
         )
     `);
+    ensureColumn('users', 'password_hash', 'TEXT');
+    ensureColumn('users', 'display_name', 'TEXT');
+    ensureColumn('users', 'avatar', 'TEXT');
 
     // 创建验证码表
     db.exec(`
@@ -67,6 +73,13 @@ function init() {
     `);
 
     console.log('✅ Database initialized');
+}
+
+function ensureColumn(table, column, definition) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+    if (!columns.some(item => item.name === column)) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    }
 }
 
 function getDb() {

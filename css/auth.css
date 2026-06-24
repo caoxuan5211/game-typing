@@ -25,8 +25,16 @@
 }
 
 .auth-logo {
-    font-size: 4rem;
-    margin-bottom: calc(var(--spacing-unit) * 2);
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto calc(var(--spacing-unit) * 2);
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 900;
 }
 
 .auth-title {

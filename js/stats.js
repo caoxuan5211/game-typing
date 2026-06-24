@@ -1,5 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore } from './storage.js';
+import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-3';
 
 let store = loadStore();
 
@@ -8,6 +9,7 @@ function init() {
     applySettings();
     bindEvents();
     renderStats();
+    renderAuthGate();
     console.info('Code Typing Lab v3.0.0 - Stats Mode');
 }
 
@@ -84,6 +86,33 @@ function renderStats() {
     renderHistory();
 }
 
+function renderAuthGate() {
+    const { token } = getAuthState();
+    let gate = document.getElementById('statsAuthGate');
+
+    if (token) {
+        gate?.remove();
+        document.querySelector('.stats-container')?.classList.remove('gated');
+        return;
+    }
+
+    document.querySelector('.stats-container')?.classList.add('gated');
+    if (!gate) {
+        gate = document.createElement('div');
+        gate.id = 'statsAuthGate';
+        gate.className = 'stats-auth-gate';
+        gate.innerHTML = `
+            <div>
+                <strong>登录后查看完整统计</strong>
+                <span>云端同步训练记录、等级、历史成绩和跨设备进度。</span>
+            </div>
+            <button class="btn btn-primary" type="button">登录 / 注册</button>
+        `;
+        document.body.appendChild(gate);
+        gate.querySelector('button').addEventListener('click', () => openAuthModal('login'));
+    }
+}
+
 function renderHistory() {
     const historyList = document.getElementById('historyList');
 
@@ -92,7 +121,7 @@ function renderHistory() {
             <div class="empty-state">
                 <div class="empty-icon">📝</div>
                 <p>暂无训练记录</p>
-                <a href="train.html" class="btn btn-primary">开始训练</a>
+                <a href="${route('/train')}" class="btn btn-primary">开始训练</a>
             </div>
         `;
         return;

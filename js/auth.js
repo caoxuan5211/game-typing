@@ -2,7 +2,7 @@
  * 登录认证逻辑
  */
 
-import { API_BASE, syncLocalStore } from './shell.js?v=20260624-2';
+import { API_BASE, route, saveAuthSession, syncLocalStore } from './shell.js?v=20260624-3';
 import { loadStore } from './storage.js';
 
 const dom = {
@@ -32,7 +32,7 @@ async function init() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.ok) {
-                window.location.href = 'train.html';
+                window.location.href = route('/train');
                 return;
             }
         } catch (error) {
@@ -40,6 +40,7 @@ async function init() {
         }
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_email');
+        localStorage.removeItem('user_profile');
     }
 
     bindEvents();
@@ -153,9 +154,7 @@ async function handleVerify() {
             throw new Error(data.error || '登录失败');
         }
 
-        // 保存 token
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('user_email', data.user.email);
+        saveAuthSession(data);
 
         try {
             await syncLocalStore(loadStore());
@@ -167,7 +166,7 @@ async function handleVerify() {
 
         // 跳转到训练页面
         setTimeout(() => {
-            window.location.href = 'train.html';
+            window.location.href = route('/train');
         }, 500);
     } catch (error) {
         console.error('Verify error:', error);
@@ -238,11 +237,7 @@ function startResendTimer() {
 
 // Loading 遮罩
 function showLoading(show) {
-    if (show) {
-        dom.loadingOverlay.classList.remove('hidden');
-    } else {
-        dom.loadingOverlay.classList.add('hidden');
-    }
+    dom.loadingOverlay.classList.add('hidden');
 }
 
 // Toast 通知

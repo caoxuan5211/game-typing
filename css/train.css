@@ -616,6 +616,23 @@
     padding: calc(var(--spacing-unit) * 3);
 }
 
+.resource-import {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: calc(var(--spacing-unit) * 1.5);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+.resource-import input {
+    min-height: 42px;
+    padding: 0 calc(var(--spacing-unit) * 1.5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    font: inherit;
+}
+
 .custom-textarea {
     width: 100%;
     min-height: 300px;
