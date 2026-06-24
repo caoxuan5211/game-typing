@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey, getStorageKey } from './storage.js?v=20260624-10';
+import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey, getStorageKey } from './storage.js?v=20260624-11';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-10';
+import { syncLocalStore } from './shell.js?v=20260624-11';
 
 // 代码片段数据
 const snippets = {
@@ -529,7 +529,6 @@ const dom = {
     codeDisplay: document.getElementById('codeDisplay'),
     hiddenInput: document.getElementById('hiddenInput'),
     startBtn: document.getElementById('startBtn'),
-    pauseBtn: document.getElementById('pauseBtn'),
     resetBtn: document.getElementById('resetBtn'),
     resetCodeBtn: document.getElementById('resetCodeBtn'),
     soundToggle: document.getElementById('soundToggle'),
@@ -594,7 +593,6 @@ function bindEvents() {
 
     // 操作按钮
     dom.startBtn.addEventListener('click', handlePrimaryAction);
-    dom.pauseBtn.addEventListener('click', pauseRound);
     dom.resetBtn.addEventListener('click', () => {
         resetRound(true);
         showToast('已换一题');
@@ -782,18 +780,39 @@ async function fetchResourceText() {
     dom.fetchResourceBtn.disabled = true;
     dom.fetchResourceBtn.textContent = '导入中';
     try {
-        const response = await fetch(url, { mode: 'cors' });
+        const resourceUrl = normalizeResourceUrl(url);
+        const response = await fetch(resourceUrl, {
+            mode: 'cors',
+            headers: { Accept: 'text/plain, text/*, */*' }
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = (await response.text()).replace(/\r\n/g, '\n').slice(0, 12000);
         if (!text.trim()) throw new Error('资源内容为空');
+        if (/^\s*<!doctype html/i.test(text) || /^\s*<html[\s>]/i.test(text)) {
+            throw new Error('资源不是可训练的文本文件');
+        }
         dom.customText.value = text;
         showToast('资源已导入，可编辑后保存');
     } catch (error) {
-        showToast('导入失败，请确认资源允许跨域或手动粘贴');
+        showToast(error.message || '导入失败，请确认链接是公开文本文件');
     } finally {
         dom.fetchResourceBtn.disabled = false;
         dom.fetchResourceBtn.textContent = '从 URL 导入';
     }
+}
+
+function normalizeResourceUrl(value) {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    const parts = parsed.pathname.split('/').filter(Boolean);
+
+    if (host === 'github.com' && parts.length >= 5 && ['blob', 'raw'].includes(parts[2])) {
+        const [owner, repo, , ref, ...fileParts] = parts;
+        if (!fileParts.length) throw new Error('GitHub 链接不是具体文件');
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${fileParts.join('/')}`;
+    }
+
+    return parsed.href;
 }
 
 // 音效和主题
@@ -1483,14 +1502,18 @@ function renderButtons() {
         paused: '继续训练',
         completed: '下一题'
     };
+    const buttonIcon = {
+        idle: '→',
+        running: 'Ⅱ',
+        paused: '→',
+        completed: '→'
+    };
 
     dom.startBtn.innerHTML = `
         <span>${buttonText[state.status]}</span>
-        <span class="btn-icon">→</span>
+        <span class="btn-icon">${buttonIcon[state.status]}</span>
     `;
     dom.startBtn.disabled = false;
-    dom.pauseBtn.disabled = state.status !== 'running';
-    dom.pauseBtn.textContent = state.status === 'running' ? '暂停' : '暂停';
 }
 
 function escapeHtml(str) {

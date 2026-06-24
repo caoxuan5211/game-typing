@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, getDefaultStore, getStorageKey } from './storage.js?v=20260624-10';
-import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-10';
+import { loadStore, saveStore, getDefaultStore, getStorageKey } from './storage.js?v=20260624-11';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-11';
 
 let store = loadStore();
 let activeStorageKey = getStorageKey();
