@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-5';
+import { syncLocalStore } from './shell.js?v=20260624-6';
 
 // 代码片段数据
 const snippets = {
@@ -308,6 +308,173 @@ const wordBanks = {
             'PRIMARY', 'FOREIGN', 'INDEX', 'CREATE', 'ALTER', 'TABLE', 'DATABASE', 'TRANSACTION'
         ]
     }
+};
+
+const wordMeanings = {
+    ability: '能力；才能',
+    absence: '缺席；不存在',
+    accept: '接受；认可',
+    achieve: '实现；达到',
+    active: '活跃的；积极的',
+    address: '地址；处理',
+    advance: '前进；进步',
+    advice: '建议',
+    afford: '负担得起',
+    against: '反对；倚着',
+    amount: '数量；总额',
+    appear: '出现；显得',
+    arrange: '安排；整理',
+    article: '文章；物品',
+    attention: '注意力',
+    average: '平均的；平均数',
+    balance: '平衡',
+    benefit: '好处；受益',
+    career: '职业；事业',
+    challenge: '挑战',
+    college: '大学',
+    compare: '比较',
+    condition: '条件；状态',
+    culture: '文化',
+    degree: '程度；学位',
+    develop: '发展；开发',
+    economy: '经济',
+    education: '教育',
+    environment: '环境',
+    experience: '经验；经历',
+    favorite: '最喜欢的',
+    foreign: '外国的',
+    general: '一般的；将军',
+    history: '历史',
+    improve: '改善；提高',
+    include: '包含；引入头文件',
+    language: '语言',
+    material: '材料；资料',
+    natural: '自然的',
+    opinion: '观点',
+    practice: '练习；实践',
+    quality: '质量；品质',
+    reason: '原因；理由',
+    research: '研究',
+    science: '科学',
+    similar: '相似的',
+    society: '社会',
+    technology: '技术',
+    abstract: '抽象的；摘要',
+    academic: '学术的',
+    acquire: '获得；习得',
+    alternative: '替代方案；可选的',
+    analyze: '分析',
+    apparent: '明显的',
+    approach: '方法；接近',
+    authority: '权威；权限',
+    capacity: '容量；能力',
+    category: '类别',
+    commitment: '承诺；投入',
+    component: '组件；组成部分',
+    consequence: '后果；结果',
+    consistent: '一致的；稳定的',
+    construct: '构造；建立',
+    contribute: '贡献',
+    criterion: '标准',
+    demonstrate: '证明；演示',
+    dimension: '维度；尺寸',
+    distinct: '不同的；清楚的',
+    domestic: '国内的；家庭的',
+    emphasis: '强调；重点',
+    evaluate: '评估',
+    evidence: '证据',
+    framework: '框架',
+    hypothesis: '假设',
+    identify: '识别；确认',
+    implement: '实现；执行',
+    indicate: '表明；指示',
+    interpret: '解释；翻译',
+    maintain: '维护；保持',
+    objective: '目标；客观的',
+    perspective: '视角',
+    phenomenon: '现象',
+    principle: '原则',
+    priority: '优先级',
+    proportion: '比例',
+    relevant: '相关的',
+    significant: '重要的；显著的',
+    strategy: '策略',
+    namespace: '命名空间',
+    using: '使用；引入命名',
+    define: '定义宏',
+    main: '主函数入口',
+    return: '返回',
+    class: '类',
+    struct: '结构体',
+    public: '公有访问权限',
+    private: '私有访问权限',
+    protected: '受保护访问权限',
+    template: '模板',
+    typename: '类型名',
+    vector: '动态数组容器',
+    string: '字符串类型',
+    unordered_map: '哈希映射容器',
+    iterator: '迭代器',
+    const: '常量限定',
+    static: '静态存储',
+    inline: '内联',
+    nullptr: '空指针',
+    override: '重写虚函数',
+    virtual: '虚函数',
+    lambda: '匿名函数',
+    begin: '起始迭代器',
+    end: '结束迭代器',
+    push_back: '尾部追加',
+    emplace_back: '原地构造追加',
+    size_t: '无符号大小类型',
+    iostream: '输入输出流头文件',
+    algorithm: '算法库',
+    memory: '内存工具库',
+    let: '块级变量声明',
+    function: '函数',
+    async: '异步函数标记',
+    await: '等待 Promise',
+    promise: '异步结果对象',
+    callback: '回调函数',
+    document: 'DOM 文档对象',
+    queryselector: '查询 DOM 元素',
+    addeventlistener: '绑定事件监听',
+    preventdefault: '阻止默认行为',
+    dataset: '元素自定义数据集',
+    classlist: '元素类名列表',
+    localstorage: '本地持久存储',
+    sessionstorage: '会话存储',
+    fetch: '网络请求',
+    response: '响应对象',
+    request: '请求对象',
+    module: '模块',
+    export: '导出',
+    import: '导入',
+    literal: '字面量',
+    select: '查询',
+    from: '来自表',
+    where: '筛选条件',
+    insert: '插入',
+    update: '更新',
+    delete: '删除',
+    values: '值列表',
+    join: '连接表',
+    left: '左连接',
+    right: '右连接',
+    inner: '内连接',
+    group: '分组',
+    order: '排序',
+    having: '分组过滤',
+    count: '计数',
+    avg: '平均值',
+    primary: '主键',
+    foreign: '外键',
+    index: '索引',
+    create: '创建',
+    alter: '修改表结构',
+    table: '数据表',
+    database: '数据库',
+    transaction: '事务'
 };
 
 const difficulty = {
@@ -1195,6 +1362,11 @@ function renderCode() {
         return;
     }
 
+    if (state.mode === 'words') {
+        renderWordCode();
+        return;
+    }
+
     const syntaxMap = getSyntaxMap(state.target, state.snippetLanguage);
     const html = Array.from(state.target).map((char, index) => {
         let className = 'pending';
@@ -1228,6 +1400,32 @@ function renderCode() {
             currentChar.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
         }
     }
+}
+
+function renderWordCode() {
+    const wordHtml = Array.from(state.target).map((char, index) => {
+        let className = 'pending';
+
+        if (index < state.input.length) {
+            className = state.input[index] === char ? 'correct' : 'incorrect';
+        } else if (index === state.input.length && state.status === 'running') {
+            className = 'current';
+        }
+
+        return `<span class="char ${className}">${escapeHtml(char)}</span>`;
+    }).join('');
+
+    dom.codeDisplay.innerHTML = `
+        <div class="word-panel">
+            <div class="word-text" aria-label="${escapeHtml(state.target)}">${wordHtml}</div>
+            <div class="word-meaning">${escapeHtml(getWordMeaning(state.target))}</div>
+            <div class="word-step">第 ${state.wordIndex + 1} 个 / 共 ${state.wordQueue.length} 个</div>
+        </div>
+    `;
+}
+
+function getWordMeaning(word) {
+    return wordMeanings[String(word || '').toLowerCase()] || '暂无释义';
 }
 
 function renderMeta() {

@@ -2,7 +2,7 @@
  * 登录认证逻辑
  */
 
-import { API_BASE, route, saveAuthSession, syncLocalStore } from './shell.js?v=20260624-5';
+import { API_BASE, route, saveAuthSession, syncLocalStore } from './shell.js?v=20260624-6';
 import { loadStore } from './storage.js';
 
 const dom = {

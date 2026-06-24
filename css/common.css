@@ -146,7 +146,7 @@ body {
     display: inline-grid;
     place-items: center;
     border-radius: 8px;
-    background: url('/assets/brand-icon.svg?v=20260624-5') center / cover no-repeat;
+    background: url('/assets/brand-icon.svg?v=20260624-6') center / cover no-repeat;
     color: transparent;
     font-size: 0;
     overflow: hidden;
@@ -367,7 +367,7 @@ body {
     display: grid;
     place-items: center;
     border-radius: var(--radius-md);
-    background: url('/assets/brand-icon.svg?v=20260624-5') center / cover no-repeat;
+    background: url('/assets/brand-icon.svg?v=20260624-6') center / cover no-repeat;
     color: transparent;
     font-size: 0;
     overflow: hidden;
