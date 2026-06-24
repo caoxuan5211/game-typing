@@ -1,14 +1,19 @@
 const nodemailer = require('nodemailer');
 
-// 创建邮件传输器
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '465'),
-    secure: true, // 使用 SSL
-    auth: {
+const emailPort = parseInt(process.env.EMAIL_PORT || '465', 10);
+const authConfig = process.env.EMAIL_PASS
+    ? {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     }
+    : undefined;
+
+// 创建邮件传输器
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: emailPort,
+    secure: emailPort === 465,
+    auth: authConfig
 });
 
 // 验证邮件配置
