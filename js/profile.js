@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-8';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-9';
 
 let store = loadStore();
 let avatarData = '';
@@ -81,7 +81,10 @@ function bindEvents() {
     dom.exportBtn.addEventListener('click', exportData);
     dom.importInput.addEventListener('change', importData);
     dom.clearBtn.addEventListener('click', clearLocalData);
-    window.addEventListener('auth:changed', () => {
+    window.addEventListener('auth:changed', event => {
+        if (['login', 'logout', 'guest'].includes(event.detail?.reason)) {
+            store = loadStore();
+        }
         const { token } = getAuthState();
         if (!token) {
             avatarData = '';

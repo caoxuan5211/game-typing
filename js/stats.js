@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore } from './storage.js';
-import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-8';
+import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-9';
 
 let store = loadStore();
 
@@ -26,6 +26,7 @@ function bindEvents() {
     document.getElementById('soundToggle').addEventListener('click', toggleSound);
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('clearHistory').addEventListener('click', clearHistory);
+    window.addEventListener('auth:changed', handleAuthChanged);
 }
 
 function toggleSound() {
@@ -163,6 +164,14 @@ function showToast(message) {
     showToast.timer = setTimeout(() => {
         toast.classList.remove('show');
     }, 2500);
+}
+
+function handleAuthChanged(event) {
+    if (!['login', 'logout', 'guest'].includes(event.detail?.reason)) return;
+    store = loadStore();
+    applySettings();
+    renderStats();
+    renderAuthGate();
 }
 
 // 页面加载完成后初始化

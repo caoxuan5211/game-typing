@@ -3,8 +3,11 @@
  */
 
 const STORAGE_KEY = 'code_typing_lab_v3';
+const USER_STORAGE_PREFIX = 'code_typing_lab_v3_user:';
 const GUEST_STORAGE_KEY = 'code_typing_lab_guest_session';
 const AUTH_MODE_KEY = 'code_typing_auth_mode';
+const AUTH_USER_KEY = 'user_profile';
+const AUTH_EMAIL_KEY = 'user_email';
 
 export function isGuestMode() {
     return localStorage.getItem(AUTH_MODE_KEY) === 'guest';
@@ -24,7 +27,7 @@ export function loadStore() {
     try {
         const data = isGuestMode()
             ? sessionStorage.getItem(GUEST_STORAGE_KEY)
-            : localStorage.getItem(STORAGE_KEY);
+            : localStorage.getItem(getStorageKey());
         if (data) {
             return { ...getDefaultStore(), ...JSON.parse(data) };
         }
@@ -37,10 +40,32 @@ export function loadStore() {
 export function saveStore(store) {
     try {
         const target = isGuestMode() ? sessionStorage : localStorage;
-        const key = isGuestMode() ? GUEST_STORAGE_KEY : STORAGE_KEY;
+        const key = isGuestMode() ? GUEST_STORAGE_KEY : getStorageKey();
         target.setItem(key, JSON.stringify(store));
     } catch (error) {
         console.warn('Failed to save store:', error);
+    }
+}
+
+export function getStorageKey() {
+    const userKey = getAuthenticatedUserKey();
+    if (!userKey) return STORAGE_KEY;
+    return `${USER_STORAGE_PREFIX}${encodeURIComponent(userKey)}`;
+}
+
+function getAuthenticatedUserKey() {
+    if (isGuestMode()) return '';
+
+    const user = safeJson(localStorage.getItem(AUTH_USER_KEY), null);
+    const rawKey = user?.id || user?.email || localStorage.getItem(AUTH_EMAIL_KEY) || '';
+    return String(rawKey).trim().toLowerCase();
+}
+
+function safeJson(value, fallback) {
+    try {
+        return value ? JSON.parse(value) : fallback;
+    } catch {
+        return fallback;
     }
 }
 

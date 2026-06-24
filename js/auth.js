@@ -2,8 +2,7 @@
  * 登录认证逻辑
  */
 
-import { API_BASE, route, saveAuthSession, syncLocalStore } from './shell.js?v=20260624-8';
-import { loadStore } from './storage.js';
+import { API_BASE, route, saveAuthSession } from './shell.js?v=20260624-9';
 
 const dom = {
     emailStep: document.getElementById('emailStep'),
@@ -155,14 +154,7 @@ async function handleVerify() {
         }
 
         saveAuthSession(data);
-
-        try {
-            await syncLocalStore(loadStore());
-            showToast('登录成功，本地数据已同步');
-        } catch (syncError) {
-            console.warn('Initial sync failed:', syncError);
-            showToast('登录成功，本地数据稍后可在个人页同步');
-        }
+        showToast('登录成功');
 
         // 跳转到训练页面
         setTimeout(() => {

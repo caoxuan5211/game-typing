@@ -1,4 +1,4 @@
-import { loadStore, setGuestMode, isGuestMode } from './storage.js?v=20260624-8';
+import { setGuestMode, isGuestMode } from './storage.js?v=20260624-9';
 
 const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -309,7 +309,6 @@ async function handlePasswordLogin(event) {
         closeAuthModal();
         initNavAuth();
         refreshCurrentUser().catch(error => console.warn('Profile refresh failed:', error));
-        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
     } catch (error) {
         showAuthMessage(error.message);
     } finally {
@@ -356,7 +355,6 @@ async function handleRegister(event) {
         closeAuthModal();
         initNavAuth();
         refreshCurrentUser().catch(error => console.warn('Profile refresh failed:', error));
-        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
     } catch (error) {
         showAuthMessage(error.message);
     } finally {

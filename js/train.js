@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-8';
+import { syncLocalStore } from './shell.js?v=20260624-9';
 
 // 代码片段数据
 const snippets = {
@@ -553,12 +553,7 @@ const dom = {
 function init() {
     applySettings();
     bindEvents();
-    document.querySelectorAll('[data-language]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.language === state.language);
-    });
-    document.querySelectorAll('[data-word-bank]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.wordBank === state.wordBank);
-    });
+    syncControlState();
     selectSnippet();
     renderAll();
     console.info('Code Typing Lab v3.0.0 - Train Mode');
@@ -632,6 +627,42 @@ function bindEvents() {
 
     // 全局快捷键
     document.addEventListener('keydown', handleGlobalKey);
+    window.addEventListener('auth:changed', handleAuthChanged);
+}
+
+function handleAuthChanged(event) {
+    if (!['login', 'logout', 'guest'].includes(event.detail?.reason)) return;
+
+    store = loadStore();
+    state.language = store.preferredLanguage || 'javascript';
+    state.wordBank = store.preferredWordBank || 'cet4';
+    state.customText = store.customText || '';
+    if (state.mode === 'custom' && !state.customText.trim()) {
+        state.mode = 'code';
+    }
+
+    applySettings();
+    syncControlState();
+    resetRound(true);
+}
+
+function syncControlState() {
+    document.querySelectorAll('[data-category]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === state.mode);
+    });
+    document.querySelectorAll('[data-language]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.language === state.language);
+    });
+    document.querySelectorAll('[data-word-bank]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.wordBank === state.wordBank);
+    });
+    document.querySelectorAll('[data-difficulty]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.difficulty === state.difficulty);
+    });
+
+    document.getElementById('languageGrid').classList.toggle('hidden', state.mode !== 'code');
+    dom.wordBankGrid.classList.toggle('hidden', state.mode !== 'words');
+    dom.editCustomBtn.classList.toggle('hidden', state.mode !== 'custom');
 }
 
 // 模式和难度切换
@@ -642,13 +673,7 @@ function setCategory(mode) {
     }
 
     state.mode = mode;
-    document.querySelectorAll('[data-category]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.category === mode);
-    });
-
-    document.getElementById('languageGrid').classList.toggle('hidden', mode !== 'code');
-    dom.wordBankGrid.classList.toggle('hidden', mode !== 'words');
-    dom.editCustomBtn.classList.toggle('hidden', mode !== 'custom');
+    syncControlState();
 
     if (mode === 'custom') {
         if (!state.customText.trim()) {

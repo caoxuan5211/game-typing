@@ -1,14 +1,11 @@
 import { audioSystem } from './audio.js';
-import { loadStore } from './storage.js';
+import { loadStore, saveStore } from './storage.js';
 
-const store = loadStore();
+let store = loadStore();
 
 // 初始化页面
 function init() {
-    // 加载统计数据
-    document.getElementById('totalSessions').textContent = store.totalRuns || 0;
-    document.getElementById('bestWpm').textContent = store.bestWpm || 0;
-    document.getElementById('dayStreak').textContent = store.dayStreak || 0;
+    renderStats();
 
     // 音效按钮
     const soundBtn = document.getElementById('soundToggle');
@@ -19,6 +16,14 @@ function init() {
     const themeBtn = document.getElementById('themeToggle');
     themeBtn.addEventListener('click', toggleTheme);
     applyTheme();
+
+    window.addEventListener('auth:changed', handleAuthChanged);
+}
+
+function renderStats() {
+    document.getElementById('totalSessions').textContent = store.totalRuns || 0;
+    document.getElementById('bestWpm').textContent = store.bestWpm || 0;
+    document.getElementById('dayStreak').textContent = store.dayStreak || 0;
 }
 
 function toggleSound() {
@@ -27,8 +32,7 @@ function toggleSound() {
     audioSystem.setEnabled(store.sound);
     soundBtn.textContent = store.sound ? '🔊' : '🔇';
 
-    // 保存到 localStorage
-    localStorage.setItem('code_typing_lab_v3', JSON.stringify(store));
+    saveStore(store);
 
     if (store.sound) {
         audioSystem.playTone(500, 0.1);
@@ -44,13 +48,22 @@ function toggleTheme() {
     themeBtn.textContent = newTheme === 'light' ? '☀️' : '🌙';
 
     store.theme = newTheme;
-    localStorage.setItem('code_typing_lab_v3', JSON.stringify(store));
+    saveStore(store);
 }
 
 function applyTheme() {
     const theme = store.theme || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     document.getElementById('themeToggle').textContent = theme === 'light' ? '☀️' : '🌙';
+}
+
+function handleAuthChanged(event) {
+    if (!['login', 'logout', 'guest'].includes(event.detail?.reason)) return;
+    store = loadStore();
+    audioSystem.setEnabled(store.sound);
+    document.getElementById('soundToggle').textContent = store.sound ? '🔊' : '🔇';
+    applyTheme();
+    renderStats();
 }
 
 // 页面加载完成后初始化
