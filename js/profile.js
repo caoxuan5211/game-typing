@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-7';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-8';
 
 let store = loadStore();
 let avatarData = '';

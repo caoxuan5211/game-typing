@@ -5,3 +5,4 @@ Disallow: /debug.html
 Disallow: /test_enter.html
 
 Sitemap: https://type.mineguai.com/sitemap.xml
+IndexNow: https://type.mineguai.com/c485e3f5a152299bd8dae0d44f506435.txt
