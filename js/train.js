@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
+import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey, getStorageKey } from './storage.js?v=20260624-10';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-9';
+import { syncLocalStore } from './shell.js?v=20260624-10';
 
 // 代码片段数据
 const snippets = {
@@ -485,6 +485,7 @@ const difficulty = {
 
 // 全局状态
 let store = loadStore();
+let activeStorageKey = getStorageKey();
 const state = {
     mode: 'code',
     language: store.preferredLanguage || 'javascript',
@@ -628,11 +629,22 @@ function bindEvents() {
     // 全局快捷键
     document.addEventListener('keydown', handleGlobalKey);
     window.addEventListener('auth:changed', handleAuthChanged);
+    window.setInterval(reloadStoreIfAccountChanged, 500);
 }
 
 function handleAuthChanged(event) {
     if (!['login', 'logout', 'guest'].includes(event.detail?.reason)) return;
+    reloadStoreForActiveAccount();
+}
 
+function reloadStoreIfAccountChanged() {
+    const nextStorageKey = getStorageKey();
+    if (nextStorageKey === activeStorageKey) return;
+    reloadStoreForActiveAccount(nextStorageKey);
+}
+
+function reloadStoreForActiveAccount(nextStorageKey = getStorageKey()) {
+    activeStorageKey = nextStorageKey;
     store = loadStore();
     state.language = store.preferredLanguage || 'javascript';
     state.wordBank = store.preferredWordBank || 'cet4';

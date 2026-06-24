@@ -1,8 +1,9 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-9';
+import { loadStore, saveStore, getDefaultStore, getStorageKey } from './storage.js?v=20260624-10';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-10';
 
 let store = loadStore();
+let activeStorageKey = getStorageKey();
 let avatarData = '';
 let profileLoading = false;
 
@@ -83,6 +84,7 @@ function bindEvents() {
     dom.clearBtn.addEventListener('click', clearLocalData);
     window.addEventListener('auth:changed', event => {
         if (['login', 'logout', 'guest'].includes(event.detail?.reason)) {
+            activeStorageKey = getStorageKey();
             store = loadStore();
         }
         const { token } = getAuthState();
@@ -94,6 +96,7 @@ function bindEvents() {
         refreshProfileFromServer();
     });
     window.addEventListener('focus', refreshProfileFromServer);
+    window.setInterval(reloadStoreIfAccountChanged, 500);
 }
 
 function updateNumber(key, min, max) {
@@ -144,6 +147,14 @@ function render() {
     dom.totalXP.textContent = store.totalXP || 0;
 
     initNavAuth();
+}
+
+function reloadStoreIfAccountChanged() {
+    const nextStorageKey = getStorageKey();
+    if (nextStorageKey === activeStorageKey) return;
+    activeStorageKey = nextStorageKey;
+    store = loadStore();
+    render();
 }
 
 function logout() {

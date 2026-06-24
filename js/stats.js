@@ -1,8 +1,9 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore } from './storage.js';
-import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-9';
+import { loadStore, saveStore, getStorageKey } from './storage.js?v=20260624-10';
+import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-10';
 
 let store = loadStore();
+let activeStorageKey = getStorageKey();
 
 // 初始化
 function init() {
@@ -27,6 +28,7 @@ function bindEvents() {
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('clearHistory').addEventListener('click', clearHistory);
     window.addEventListener('auth:changed', handleAuthChanged);
+    window.setInterval(reloadStoreIfAccountChanged, 500);
 }
 
 function toggleSound() {
@@ -168,6 +170,17 @@ function showToast(message) {
 
 function handleAuthChanged(event) {
     if (!['login', 'logout', 'guest'].includes(event.detail?.reason)) return;
+    reloadStoreForActiveAccount();
+}
+
+function reloadStoreIfAccountChanged() {
+    const nextStorageKey = getStorageKey();
+    if (nextStorageKey === activeStorageKey) return;
+    reloadStoreForActiveAccount(nextStorageKey);
+}
+
+function reloadStoreForActiveAccount(nextStorageKey = getStorageKey()) {
+    activeStorageKey = nextStorageKey;
     store = loadStore();
     applySettings();
     renderStats();
