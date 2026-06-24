@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey, getStorageKey } from './storage.js?v=20260624-11';
+import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey, getStorageKey } from './storage.js?v=20260624-13';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-11';
+import { syncLocalStore } from './shell.js?v=20260624-13';
 
 // 代码片段数据
 const snippets = {

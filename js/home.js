@@ -1,5 +1,5 @@
 import { audioSystem } from './audio.js';
-import { loadStore, saveStore, getStorageKey } from './storage.js?v=20260624-11';
+import { loadStore, saveStore, getStorageKey } from './storage.js?v=20260624-13';
 
 let store = loadStore();
 let activeStorageKey = getStorageKey();

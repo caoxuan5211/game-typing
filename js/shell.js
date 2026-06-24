@@ -1,4 +1,4 @@
-import { setGuestMode, isGuestMode } from './storage.js?v=20260624-11';
+import { setGuestMode, isGuestMode } from './storage.js?v=20260624-13';
 
 const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const AUTH_TOKEN_KEY = 'auth_token';

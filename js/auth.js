@@ -2,7 +2,7 @@
  * 登录认证逻辑
  */
 
-import { API_BASE, route, saveAuthSession } from './shell.js?v=20260624-11';
+import { API_BASE, route, saveAuthSession } from './shell.js?v=20260624-13';
 
 const dom = {
     emailStep: document.getElementById('emailStep'),
