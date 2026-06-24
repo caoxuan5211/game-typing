@@ -1,12 +1,14 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
+import { syncLocalStore } from './shell.js';
 
 // 代码片段数据
 const snippets = {
-    code: [
+    javascript: [
         {
             title: "JavaScript 函数",
+            language: "javascript",
             text: `function formatUser(user) {
 \tconst name = user.name.trim();
 \treturn \`\${name} <\${user.email}>\`;
@@ -14,6 +16,7 @@ const snippets = {
         },
         {
             title: "React Hook",
+            language: "javascript",
             text: `function useLatest(value) {
 \tconst ref = useRef(value);
 \tuseEffect(() => {
@@ -24,6 +27,7 @@ const snippets = {
         },
         {
             title: "数组处理",
+            language: "javascript",
             text: `const activeUsers = users
 \t.filter(user => user.enabled)
 \t.map(user => ({
@@ -33,6 +37,7 @@ const snippets = {
         },
         {
             title: "异步函数",
+            language: "javascript",
             text: `async function fetchUser(id) {
 \tconst response = await fetch(\`/api/users/\${id}\`);
 \tif (!response.ok) {
@@ -42,54 +47,106 @@ const snippets = {
 }`
         }
     ],
-    symbols: [
+    cpp: [
         {
-            title: "符号密集",
-            text: `() => { return [a, b, c].join("::"); }`
+            title: "CPP STL 遍历",
+            language: "cpp",
+            text: `vector<int> filterEven(const vector<int>& nums) {
+\tvector<int> result;
+\tfor (int value : nums) {
+\t\tif (value % 2 == 0) result.push_back(value);
+\t}
+\treturn result;
+}`
         },
         {
-            title: "正则表达式",
-            text: `const slug = value.replace(/[^a-z0-9-]/gi, "-").toLowerCase();`
+            title: "CPP 模板函数",
+            language: "cpp",
+            text: `template <typename T>
+T clampValue(T value, T low, T high) {
+\tif (value < low) return low;
+\tif (value > high) return high;
+\treturn value;
+}`
         },
         {
-            title: "SQL 查询",
-            text: `SELECT id, email FROM users WHERE role = 'admin' AND active = 1;`
-        },
-        {
-            title: "可选链",
-            text: `const total = cart?.items?.reduce((sum, item) => sum + item.price, 0) ?? 0;`
+            title: "CPP 指针检查",
+            language: "cpp",
+            text: `Node* find(Node* head, int target) {
+\twhile (head != nullptr) {
+\t\tif (head->value == target) return head;
+\t\thead = head->next;
+\t}
+\treturn nullptr;
+}`
         }
     ],
-    flow: [
+    html: [
         {
-            title: "异步重试",
-            text: `async function retry(task, limit = 3) {
-\tlet lastError;
-\tfor (let attempt = 1; attempt <= limit; attempt++) {
-\t\ttry {
-\t\t\treturn await task();
-\t\t} catch (error) {
-\t\t\tlastError = error;
-\t\t\tawait wait(attempt * 250);
-\t\t}
-\t}
-\tthrow lastError;
-}`
+            title: "HTML 表单",
+            language: "html",
+            text: `<form class="login-form" method="post">
+\t<label for="email">Email</label>
+\t<input id="email" name="email" type="email" required>
+\t<button type="submit">Sign in</button>
+</form>`
         },
         {
-            title: "状态归并",
-            text: `function reducer(state, action) {
-\tswitch (action.type) {
-\t\tcase "start":
-\t\t\treturn { ...state, status: "running", errors: 0 };
-\t\tcase "finish":
-\t\t\treturn { ...state, status: "done", result: action.result };
-\t\tdefault:
-\t\t\treturn state;
-\t}
-}`
+            title: "HTML 卡片",
+            language: "html",
+            text: `<article class="profile-card">
+\t<header>
+\t\t<h2>Typing Progress</h2>
+\t\t<p>Keep the daily streak alive.</p>
+\t</header>
+</article>`
+        },
+        {
+            title: "HTML 导航",
+            language: "html",
+            text: `<nav aria-label="Primary">
+\t<a href="/train" class="active">Train</a>
+\t<a href="/stats">Stats</a>
+\t<a href="/profile">Profile</a>
+</nav>`
+        }
+    ],
+    sql: [
+        {
+            title: "SQL 用户查询",
+            language: "sql",
+            text: `SELECT id, email, last_login
+FROM users
+WHERE role = 'admin'
+\tAND active = 1
+ORDER BY last_login DESC;`
+        },
+        {
+            title: "SQL 聚合",
+            language: "sql",
+            text: `SELECT mode, COUNT(*) AS runs, AVG(wpm) AS avg_wpm
+FROM training_sessions
+WHERE created_at >= DATE('now', '-7 days')
+GROUP BY mode
+HAVING runs >= 3;`
+        },
+        {
+            title: "SQL 更新",
+            language: "sql",
+            text: `UPDATE user_stats
+SET total_runs = total_runs + 1,
+\tbest_wpm = MAX(best_wpm, 92)
+WHERE user_id = ?;`
         }
     ]
+};
+
+const languageLabels = {
+    javascript: 'JavaScript',
+    cpp: 'CPP',
+    html: 'HTML',
+    sql: 'SQL',
+    custom: 'Custom'
 };
 
 const difficulty = {
@@ -101,11 +158,13 @@ const difficulty = {
 // 全局状态
 let store = loadStore();
 const state = {
-    mode: 'code',
+    mode: 'common',
+    language: store.preferredLanguage || 'javascript',
     difficulty: 'medium',
     status: 'idle',
     target: '',
     title: '',
+    snippetLanguage: 'javascript',
     input: '',
     startedAt: 0,
     pausedAt: 0,
@@ -134,12 +193,14 @@ const dom = {
     codeDisplay: document.getElementById('codeDisplay'),
     hiddenInput: document.getElementById('hiddenInput'),
     startBtn: document.getElementById('startBtn'),
+    pauseBtn: document.getElementById('pauseBtn'),
     resetBtn: document.getElementById('resetBtn'),
     resetCodeBtn: document.getElementById('resetCodeBtn'),
     soundToggle: document.getElementById('soundToggle'),
     themeToggle: document.getElementById('themeToggle'),
     customModal: document.getElementById('customModal'),
     customText: document.getElementById('customText'),
+    editCustomBtn: document.getElementById('editCustomBtn'),
     saveCustom: document.getElementById('saveCustom'),
     cancelCustom: document.getElementById('cancelCustom'),
     closeModal: document.getElementById('closeModal'),
@@ -154,6 +215,9 @@ const dom = {
 function init() {
     applySettings();
     bindEvents();
+    document.querySelectorAll('[data-language]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.language === state.language);
+    });
     selectSnippet();
     renderAll();
     console.info('Code Typing Lab v3.0.0 - Train Mode');
@@ -163,18 +227,23 @@ function applySettings() {
     audioSystem.setEnabled(store.sound);
     dom.soundToggle.textContent = store.sound ? '🔊' : '🔇';
 
-    const theme = store.theme || 'dark';
+    const theme = store.theme || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     dom.themeToggle.textContent = theme === 'light' ? '☀️' : '🌙';
+    document.documentElement.style.setProperty('--typing-font-size', `${store.codeFontSize || 24}px`);
+    document.documentElement.style.setProperty('--typing-tab-size', String(store.tabSize || 4));
 
     dom.customText.value = state.customText;
     normalizeDailyStats(store);
 }
 
 function bindEvents() {
-    // 模式选择
-    document.querySelectorAll('[data-mode]').forEach(btn => {
-        btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    document.querySelectorAll('[data-category]').forEach(btn => {
+        btn.addEventListener('click', () => setCategory(btn.dataset.category));
+    });
+
+    document.querySelectorAll('[data-language]').forEach(btn => {
+        btn.addEventListener('click', () => setLanguage(btn.dataset.language));
     });
 
     // 难度选择
@@ -184,6 +253,7 @@ function bindEvents() {
 
     // 操作按钮
     dom.startBtn.addEventListener('click', handlePrimaryAction);
+    dom.pauseBtn.addEventListener('click', pauseRound);
     dom.resetBtn.addEventListener('click', () => {
         resetRound(true);
         showToast('已换一题');
@@ -201,6 +271,7 @@ function bindEvents() {
     dom.saveCustom.addEventListener('click', saveCustomText);
     dom.cancelCustom.addEventListener('click', closeCustomModal);
     dom.closeModal.addEventListener('click', closeCustomModal);
+    dom.editCustomBtn.addEventListener('click', openCustomModal);
 
     // 代码区域点击聚焦
     dom.codeDisplay.addEventListener('click', () => {
@@ -218,16 +289,19 @@ function bindEvents() {
 }
 
 // 模式和难度切换
-function setMode(mode) {
+function setCategory(mode) {
     if (state.status === 'running') {
         showToast('请先完成或暂停当前训练');
         return;
     }
 
     state.mode = mode;
-    document.querySelectorAll('[data-mode]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
+    document.querySelectorAll('[data-category]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === mode);
     });
+
+    document.getElementById('languageGrid').classList.toggle('hidden', mode !== 'common');
+    dom.editCustomBtn.classList.toggle('hidden', mode !== 'custom');
 
     if (mode === 'custom') {
         if (!state.customText.trim()) {
@@ -235,6 +309,23 @@ function setMode(mode) {
             return;
         }
     }
+
+    resetRound(true);
+}
+
+function setLanguage(language) {
+    if (state.status === 'running') {
+        showToast('训练中暂时不能切换语言');
+        return;
+    }
+
+    state.language = language;
+    store.preferredLanguage = language;
+    saveStore(store);
+
+    document.querySelectorAll('[data-language]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.language === language);
+    });
 
     resetRound(true);
 }
@@ -274,7 +365,7 @@ function saveCustomText() {
     store.customText = text;
     saveStore(store);
     closeCustomModal();
-    setMode('custom');
+    setCategory('custom');
     showToast('自定义文本已保存');
 }
 
@@ -316,10 +407,11 @@ function selectSnippet() {
     if (state.mode === 'custom' && state.customText.trim()) {
         state.target = state.customText.replace(/\r\n/g, '\n');
         state.title = '自定义文本';
+        state.snippetLanguage = 'custom';
         return;
     }
 
-    const pool = snippets[state.mode] || snippets.code;
+    const pool = snippets[state.language] || snippets.javascript;
     const limit = difficulty[state.difficulty].max;
     const candidates = pool.filter(item => item.text.length <= limit);
     const source = candidates.length ? candidates : pool;
@@ -327,11 +419,15 @@ function selectSnippet() {
 
     state.target = source[index].text;
     state.title = source[index].title;
+    state.snippetLanguage = source[index].language || state.language;
 }
 
 // 训练控制
 function handlePrimaryAction() {
-    if (state.status === 'running') return;
+    if (state.status === 'running') {
+        pauseRound();
+        return;
+    }
 
     if (state.status === 'paused') {
         resumeRound();
@@ -444,9 +540,10 @@ function completeRound() {
     }
 
     // 记录模式
+    const playedMode = state.mode === 'custom' ? 'custom' : state.snippetLanguage;
     if (!store.modesPlayed) store.modesPlayed = [];
-    if (!store.modesPlayed.includes(state.mode)) {
-        store.modesPlayed.push(state.mode);
+    if (!store.modesPlayed.includes(playedMode)) {
+        store.modesPlayed.push(playedMode);
         store.modesCompleted = store.modesPlayed.length;
     }
 
@@ -482,7 +579,7 @@ function completeRound() {
         wpm: result.wpm,
         accuracy: result.accuracy,
         time: result.elapsed,
-        mode: state.mode,
+        mode: playedMode,
         chars: state.target.length,
         grade: result.grade,
         xp: xpGained,
@@ -491,6 +588,11 @@ function completeRound() {
     store.history = store.history.slice(0, 20);
 
     saveStore(store);
+    if (store.autoSync) {
+        syncLocalStore(store).catch(error => {
+            console.warn('Sync failed:', error);
+        });
+    }
 
     audioSystem.playComplete();
 
@@ -511,6 +613,13 @@ function completeRound() {
 
 // 输入处理
 function handleKeydown(event) {
+    if (event.key === 'Enter' && state.status === 'running') {
+        event.preventDefault();
+        event.stopPropagation();
+        insertSmartNewline();
+        return;
+    }
+
     if (event.key === 'Tab') {
         event.preventDefault();
         if (state.status !== 'running') return;
@@ -522,6 +631,46 @@ function handleKeydown(event) {
         input.selectionStart = input.selectionEnd = start + 1;
         input.dispatchEvent(new Event('input', { bubbles: true }));
     }
+}
+
+function insertSmartNewline() {
+    const input = dom.hiddenInput;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const value = input.value.replace(/\r\n/g, '\n');
+    const insertText = getSmartNewlineText(value, start);
+
+    input.value = `${value.slice(0, start)}${insertText}${value.slice(end)}`;
+    input.selectionStart = input.selectionEnd = start + insertText.length;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function getSmartNewlineText(value, cursor) {
+    const beforeCursor = value.slice(0, cursor);
+    const currentLine = beforeCursor.slice(beforeCursor.lastIndexOf('\n') + 1);
+    const baseIndent = currentLine.match(/^[\t ]*/)?.[0] || '';
+    const targetIndent = getTargetNextLineIndent(cursor);
+    const indentUnit = getIndentUnit(baseIndent || targetIndent || '');
+    const shouldIndentBlock = /[{[(]\s*$/.test(currentLine);
+
+    if (targetIndent !== null && (shouldIndentBlock || targetIndent.length >= baseIndent.length)) {
+        return `\n${targetIndent}`;
+    }
+
+    return `\n${baseIndent}${shouldIndentBlock ? indentUnit : ''}`;
+}
+
+function getTargetNextLineIndent(cursor) {
+    const targetAfterCursor = state.target.slice(cursor);
+    const match = targetAfterCursor.match(/^\n([\t ]*)/);
+    return match ? match[1] : null;
+}
+
+function getIndentUnit(indentSample) {
+    if (indentSample && !indentSample.includes('\t')) {
+        return ' '.repeat(store.tabSize || 4);
+    }
+    return '\t';
 }
 
 function handleInput(event) {
@@ -572,13 +721,18 @@ function handleGlobalKey(event) {
     if (event.key === 'Escape') {
         if (state.status === 'running') {
             pauseRound();
+        } else if (state.status === 'paused') {
+            resumeRound();
         }
         return;
     }
 
     if (event.key === 'Enter') {
-        const isTyping = document.activeElement === dom.hiddenInput;
-        if (state.status === 'running' && isTyping) return;
+        const isTextEditing = document.activeElement === dom.hiddenInput
+            || document.activeElement === dom.customText
+            || document.activeElement?.tagName === 'INPUT';
+        if (state.status === 'running' && isTextEditing) return;
+        if (state.status === 'idle' && isTextEditing && document.activeElement !== dom.hiddenInput) return;
 
         event.preventDefault();
         handlePrimaryAction();
@@ -705,6 +859,7 @@ function renderCode() {
         return;
     }
 
+    const syntaxMap = getSyntaxMap(state.target, state.snippetLanguage);
     const html = Array.from(state.target).map((char, index) => {
         let className = 'pending';
 
@@ -714,11 +869,18 @@ function renderCode() {
             className = 'current';
         }
 
-        if (char === '\t') {
-            return `<span class="char ${className}"><span class="tab-marker">\t</span></span>`;
+        const syntaxClass = syntaxMap[index] || '';
+        const classes = ['char', className, syntaxClass].filter(Boolean).join(' ');
+
+        if (char === '\n') {
+            return `<span class="${classes} newline"></span><br>`;
         }
 
-        return `<span class="char ${className}">${escapeHtml(char)}</span>`;
+        if (char === '\t') {
+            return `<span class="${classes}"><span class="tab-marker">\t</span></span>`;
+        }
+
+        return `<span class="${classes}">${escapeHtml(char)}</span>`;
     }).join('');
 
     dom.codeDisplay.innerHTML = html;
@@ -734,13 +896,14 @@ function renderCode() {
 
 function renderMeta() {
     dom.snippetTitle.textContent = state.title || '选择模式开始';
-    dom.snippetMeta.textContent = `${state.target.length} 字符`;
+    const language = languageLabels[state.snippetLanguage] || languageLabels[state.language] || 'Code';
+    dom.snippetMeta.textContent = `${language} · ${state.target.length} 字符`;
 }
 
 function renderButtons() {
     const buttonText = {
         idle: '开始训练',
-        running: '训练中...',
+        running: '暂停训练',
         paused: '继续训练',
         completed: '下一题'
     };
@@ -749,7 +912,9 @@ function renderButtons() {
         <span>${buttonText[state.status]}</span>
         <span class="btn-icon">→</span>
     `;
-    dom.startBtn.disabled = state.status === 'running';
+    dom.startBtn.disabled = false;
+    dom.pauseBtn.disabled = state.status !== 'running';
+    dom.pauseBtn.textContent = state.status === 'running' ? '暂停' : '暂停';
 }
 
 function escapeHtml(str) {
@@ -759,6 +924,59 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function getSyntaxMap(code, language) {
+    const map = Array.from({ length: code.length }, () => '');
+
+    function mark(start, end, className) {
+        for (let i = Math.max(0, start); i < Math.min(code.length, end); i += 1) {
+            if (!map[i]) map[i] = className;
+        }
+    }
+
+    function markRegex(regex, className, groupIndex = 0) {
+        for (const match of code.matchAll(regex)) {
+            const value = match[groupIndex];
+            if (!value) continue;
+            const offset = match.index + match[0].indexOf(value);
+            mark(offset, offset + value.length, className);
+        }
+    }
+
+    if (language === 'html') {
+        markRegex(/<!--[\s\S]*?-->/g, 'syntax-comment');
+        markRegex(/<\/?[a-zA-Z][\w:-]*/g, 'syntax-keyword');
+        markRegex(/\s([a-zA-Z_:][\w:.-]*)(?=\s*=\s*)/g, 'syntax-property', 1);
+        markRegex(/"[^"]*"|'[^']*'/g, 'syntax-string');
+        markRegex(/[<>/]/g, 'syntax-operator');
+        return map;
+    }
+
+    if (language === 'sql') {
+        markRegex(/'[^']*'|"[^"]*"/g, 'syntax-string');
+        markRegex(/--.*$/gm, 'syntax-comment');
+        markRegex(/\b(SELECT|FROM|WHERE|AND|OR|ORDER|BY|GROUP|HAVING|UPDATE|SET|INSERT|INTO|VALUES|DELETE|JOIN|LEFT|RIGHT|INNER|AS|COUNT|AVG|MAX|MIN|DATE|DESC|ASC)\b/gi, 'syntax-keyword');
+        markRegex(/\b\d+(?:\.\d+)?\b/g, 'syntax-number');
+        markRegex(/[=<>+*?,.-]/g, 'syntax-operator');
+        return map;
+    }
+
+    markRegex(/\/\/.*$/gm, 'syntax-comment');
+    markRegex(/\/\*[\s\S]*?\*\//g, 'syntax-comment');
+    markRegex(/`(?:\\.|[^`])*`|"(\\"|[^"])*"|'(\\'|[^'])*'/g, 'syntax-string');
+    markRegex(/\b\d+(?:\.\d+)?\b/g, 'syntax-number');
+
+    if (language === 'cpp') {
+        markRegex(/#\s*\w+/g, 'syntax-keyword');
+        markRegex(/\b(template|typename|class|struct|const|auto|int|double|float|void|bool|char|return|if|else|for|while|nullptr|vector|string|public|private|include|using|namespace)\b/g, 'syntax-keyword');
+    } else {
+        markRegex(/\b(async|await|function|const|let|var|return|if|else|for|while|switch|case|default|try|catch|throw|new|class|import|from|export)\b/g, 'syntax-keyword');
+    }
+
+    markRegex(/\b([A-Za-z_$][\w$]*)(?=\s*\()/g, 'syntax-function', 1);
+    markRegex(/[{}()[\].,;:+\-*/%<>=!&|?]/g, 'syntax-operator');
+    return map;
 }
 
 // 显示连击特效

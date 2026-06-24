@@ -2,9 +2,8 @@
  * 登录认证逻辑
  */
 
-const API_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:3001/api'
-    : 'https://type.mineguai.com/api';
+import { API_BASE, syncLocalStore } from './shell.js';
+import { loadStore } from './storage.js';
 
 const dom = {
     emailStep: document.getElementById('emailStep'),
@@ -24,12 +23,23 @@ let resendTimer = null;
 let resendSeconds = 60;
 
 // 初始化
-function init() {
+async function init() {
     // 检查是否已登录
     const token = localStorage.getItem('auth_token');
     if (token) {
-        window.location.href = 'train.html';
-        return;
+        try {
+            const response = await fetch(`${API_BASE}/auth/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                window.location.href = 'train.html';
+                return;
+            }
+        } catch (error) {
+            console.warn('Token check failed:', error);
+        }
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_email');
     }
 
     bindEvents();
@@ -83,6 +93,7 @@ async function handleSendCode() {
 
     showLoading(true);
     dom.sendCodeBtn.disabled = true;
+    dom.sendCodeBtn.textContent = '发送中...';
 
     try {
         const response = await fetch(`${API_BASE}/auth/send-code`, {
@@ -111,6 +122,7 @@ async function handleSendCode() {
     } finally {
         showLoading(false);
         dom.sendCodeBtn.disabled = false;
+        dom.sendCodeBtn.textContent = '获取验证码';
     }
 }
 
@@ -126,6 +138,7 @@ async function handleVerify() {
 
     showLoading(true);
     dom.verifyBtn.disabled = true;
+    dom.verifyBtn.textContent = '登录中...';
 
     try {
         const response = await fetch(`${API_BASE}/auth/verify-code`, {
@@ -144,7 +157,13 @@ async function handleVerify() {
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user_email', data.user.email);
 
-        showToast('登录成功！');
+        try {
+            await syncLocalStore(loadStore());
+            showToast('登录成功，本地数据已同步');
+        } catch (syncError) {
+            console.warn('Initial sync failed:', syncError);
+            showToast('登录成功，本地数据稍后可在个人页同步');
+        }
 
         // 跳转到训练页面
         setTimeout(() => {
@@ -158,6 +177,7 @@ async function handleVerify() {
     } finally {
         showLoading(false);
         dom.verifyBtn.disabled = false;
+        dom.verifyBtn.textContent = '登录';
     }
 }
 

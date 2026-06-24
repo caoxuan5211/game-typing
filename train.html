@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +19,7 @@
                 <a href="index.html" class="nav-link">首页</a>
                 <a href="train.html" class="nav-link active">训练</a>
                 <a href="stats.html" class="nav-link">统计</a>
+                <a href="profile.html" class="nav-link">个人</a>
             </div>
             <div class="nav-actions">
                 <a href="login.html" class="btn btn-primary btn-sm">登录</a>
@@ -89,24 +90,29 @@
                 <!-- 模式选择 -->
                 <div class="mode-card">
                     <div class="card-title">训练模式</div>
-                    <div class="mode-grid">
-                        <button class="mode-btn active" data-mode="code">
-                            <span class="mode-icon">📝</span>
-                            <span class="mode-label">代码</span>
+                    <div class="mode-tabs" role="tablist" aria-label="训练模式">
+                        <button class="mode-tab active" data-category="common" type="button">常用</button>
+                        <button class="mode-tab" data-category="custom" type="button">自定义</button>
+                    </div>
+                    <div class="language-grid" id="languageGrid">
+                        <button class="language-btn active" data-language="javascript" type="button">
+                            <span class="language-name">JS</span>
+                            <span class="language-desc">异步 / DOM / 逻辑</span>
                         </button>
-                        <button class="mode-btn" data-mode="symbols">
-                            <span class="mode-icon">🔣</span>
-                            <span class="mode-label">符号</span>
+                        <button class="language-btn" data-language="cpp" type="button">
+                            <span class="language-name">CPP</span>
+                            <span class="language-desc">模板 / 指针 / STL</span>
                         </button>
-                        <button class="mode-btn" data-mode="flow">
-                            <span class="mode-icon">📖</span>
-                            <span class="mode-label">长段</span>
+                        <button class="language-btn" data-language="html" type="button">
+                            <span class="language-name">HTML</span>
+                            <span class="language-desc">标签 / 属性 / 结构</span>
                         </button>
-                        <button class="mode-btn" data-mode="custom">
-                            <span class="mode-icon">✏️</span>
-                            <span class="mode-label">自定义</span>
+                        <button class="language-btn" data-language="sql" type="button">
+                            <span class="language-name">SQL</span>
+                            <span class="language-desc">查询 / 条件 / 聚合</span>
                         </button>
                     </div>
+                    <button class="custom-entry hidden" id="editCustomBtn" type="button">编辑自定义文本</button>
                 </div>
 
                 <!-- 难度选择 -->
@@ -125,6 +131,7 @@
                         <span>开始训练</span>
                         <span class="btn-icon">→</span>
                     </button>
+                    <button class="btn btn-secondary btn-block" id="pauseBtn" disabled>暂停</button>
                     <button class="btn btn-secondary btn-block" id="resetBtn">换一题</button>
                 </div>
             </aside>
@@ -188,6 +195,7 @@
         </div>
     </div>
 
+    <script type="module" src="js/shell.js"></script>
     <script type="module" src="js/train.js"></script>
 </body>
 </html>

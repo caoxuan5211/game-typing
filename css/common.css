@@ -68,10 +68,30 @@
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
+[data-theme="dark"] {
+    --color-bg: #0A0E1A;
+    --color-surface: #131824;
+    --color-surface-elevated: #1A2133;
+    --color-border: #262D42;
+
+    --color-text-primary: #E8EAED;
+    --color-text-secondary: #9BA3B8;
+    --color-text-tertiary: #6B7280;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+[hidden] {
+    display: none !important;
 }
 
 html {
@@ -93,13 +113,12 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(12px);
-    background: rgba(10, 14, 26, 0.8);
+    background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
 }
 
 [data-theme="light"] .nav {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--color-surface);
 }
 
 .nav {
@@ -107,7 +126,8 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4);
-    max-width: 1400px;
+    width: 100%;
+    max-width: none;
     margin: 0 auto;
 }
 
@@ -150,7 +170,14 @@ body {
 
 .nav-actions {
     display: flex;
+    align-items: center;
     gap: calc(var(--spacing-unit) * 1);
+}
+
+.nav-auth-link {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 按钮 */
@@ -285,6 +312,10 @@ body {
     .nav-link {
         padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 1.5);
         font-size: 0.875rem;
+    }
+
+    .nav-auth-link {
+        max-width: 76px;
     }
 
     .btn {

@@ -1,7 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore } from './storage.js';
 
-const DAILY_GOAL = 1200;
 let store = loadStore();
 
 // 初始化
@@ -16,7 +15,7 @@ function applySettings() {
     audioSystem.setEnabled(store.sound);
     document.getElementById('soundToggle').textContent = store.sound ? '🔊' : '🔇';
 
-    const theme = store.theme || 'dark';
+    const theme = store.theme || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     document.getElementById('themeToggle').textContent = theme === 'light' ? '☀️' : '🌙';
 }
@@ -76,8 +75,9 @@ function renderStats() {
     document.getElementById('dayStreak').textContent = store.dayStreak || 0;
 
     // 今日进度
-    const todayProgress = Math.min(100, Math.round((store.todayChars / DAILY_GOAL) * 100));
-    document.getElementById('dailyGoalText').textContent = `${store.todayChars} / ${DAILY_GOAL} 字符`;
+    const dailyGoal = store.dailyGoal || 1200;
+    const todayProgress = Math.min(100, Math.round((store.todayChars / dailyGoal) * 100));
+    document.getElementById('dailyGoalText').textContent = `${store.todayChars} / ${dailyGoal} 字符`;
     document.getElementById('dailyProgressBar').style.width = `${todayProgress}%`;
 
     // 历史记录
@@ -102,6 +102,10 @@ function renderHistory() {
         const date = new Date(item.createdAt);
         const dateStr = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         const modeMap = {
+            javascript: 'JavaScript',
+            cpp: 'CPP',
+            html: 'HTML',
+            sql: 'SQL',
             code: '代码',
             symbols: '符号',
             flow: '长段',

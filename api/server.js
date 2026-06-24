@@ -10,10 +10,25 @@ const db = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.set('trust proxy', 1);
+
 // 安全中间件
 app.use(helmet());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+    origin(origin, callback) {
+        const allowedOrigins = new Set([
+            process.env.FRONTEND_URL || 'https://type.mineguai.com',
+            'http://localhost:8000',
+            'http://127.0.0.1:8000'
+        ]);
+
+        if (!origin || allowedOrigins.has(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error('Not allowed by CORS'));
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -37,6 +52,10 @@ app.use('/api/user', userRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

@@ -34,8 +34,12 @@ export function getDefaultStore() {
         dayStreak: 0,
         history: [],
         customText: '',
-        theme: 'dark',
+        theme: 'light',
         sound: true,
+        dailyGoal: 1200,
+        codeFontSize: 24,
+        tabSize: 4,
+        autoSync: true,
 
         // 成就系统
         totalXP: 0,

@@ -48,7 +48,7 @@ function toggleTheme() {
 }
 
 function applyTheme() {
-    const theme = store.theme || 'dark';
+    const theme = store.theme || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     document.getElementById('themeToggle').textContent = theme === 'light' ? '☀️' : '🌙';
 }
