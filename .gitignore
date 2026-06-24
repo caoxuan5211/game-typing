@@ -33,6 +33,8 @@ logs/
 tmp/
 temp/
 *.tmp
+local-owner-monitor/.env
+local-owner-monitor/
 
 # Backup
 *.bak

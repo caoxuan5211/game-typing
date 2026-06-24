@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
+const eventRoutes = require('./routes/events');
+const adminRoutes = require('./routes/admin');
 const db = require('./database');
 
 const app = express();
@@ -41,14 +43,23 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // 验证码限流（更严格）
-const authLimiter = rateLimit({
+const codeLimiter = rateLimit({
     windowMs: 60 * 1000, // 1分钟
     max: 3 // 每分钟最多3次
 });
 
+const loginLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 15
+});
+
 // 路由
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth/send-code', codeLimiter);
+app.use(['/api/auth/login', '/api/auth/register'], loginLimiter);
+app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {

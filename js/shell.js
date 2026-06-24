@@ -1,10 +1,14 @@
-import { loadStore, setGuestMode, isGuestMode } from './storage.js?v=20260624-3';
+import { loadStore, setGuestMode, isGuestMode } from './storage.js?v=20260624-4';
 
 const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const AUTH_TOKEN_KEY = 'auth_token';
 const AUTH_EMAIL_KEY = 'user_email';
 const AUTH_USER_KEY = 'user_profile';
 const PROMPT_SEEN_KEY = 'auth_prompt_seen';
+const API_TIMEOUT_MS = 12000;
+const PROFILE_REFRESH_MIN_MS = 30000;
+
+let lastProfileRefreshAt = 0;
 
 export const API_BASE = isLocalHost
     ? 'http://localhost:3001/api'
@@ -41,24 +45,28 @@ export function saveAuthSession(data) {
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
     setGuestMode(false);
     sessionStorage.setItem(PROMPT_SEEN_KEY, '1');
-    window.dispatchEvent(new CustomEvent('auth:changed'));
+    dispatchAuthChanged('login');
 }
 
 export function clearAuthSession() {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(AUTH_EMAIL_KEY);
     localStorage.removeItem(AUTH_USER_KEY);
-    window.dispatchEvent(new CustomEvent('auth:changed'));
+    lastProfileRefreshAt = 0;
+    dispatchAuthChanged('logout');
 }
 
 export function enterGuestMode() {
     clearAuthSession();
     setGuestMode(true);
     sessionStorage.setItem(PROMPT_SEEN_KEY, '1');
-    window.dispatchEvent(new CustomEvent('auth:changed'));
+    dispatchAuthChanged('guest');
 }
 
 export async function apiRequest(path, options = {}) {
+    const { timeoutMs = API_TIMEOUT_MS, ...requestOptions } = options;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
     const headers = {
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
         ...(options.headers || {})
@@ -67,14 +75,27 @@ export async function apiRequest(path, options = {}) {
     const { token } = getAuthState();
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const response = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers,
-        body: options.body && typeof options.body !== 'string'
-            ? JSON.stringify(options.body)
-            : options.body
-    });
-    const data = await response.json().catch(() => ({}));
+    let response;
+    let data;
+
+    try {
+        response = await fetch(`${API_BASE}${path}`, {
+            ...requestOptions,
+            headers,
+            signal: controller.signal,
+            body: requestOptions.body && typeof requestOptions.body !== 'string'
+                ? JSON.stringify(requestOptions.body)
+                : requestOptions.body
+        });
+        data = await response.json().catch(() => ({}));
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('请求超时，请检查网络后重试');
+        }
+        throw new Error('网络连接失败，请稍后重试');
+    } finally {
+        window.clearTimeout(timeout);
+    }
 
     if (!response.ok) {
         throw new Error(data.error || '请求失败');
@@ -90,11 +111,21 @@ export async function refreshCurrentUser() {
         const data = await apiRequest('/auth/me');
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
         localStorage.setItem(AUTH_EMAIL_KEY, data.user.email);
+        lastProfileRefreshAt = Date.now();
+        dispatchAuthChanged('refresh');
         return data.user;
     } catch (error) {
         clearAuthSession();
         return null;
     }
+}
+
+export function updateStoredUser(user) {
+    if (!user) return;
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(AUTH_EMAIL_KEY, user.email);
+    lastProfileRefreshAt = Date.now();
+    dispatchAuthChanged('profile');
 }
 
 export function initNavAuth() {
@@ -104,12 +135,15 @@ export function initNavAuth() {
     document.querySelectorAll('.nav-actions a[href$="login.html"], .nav-actions a[href="/login"], .nav-auth-link')
         .forEach(authLink => {
             authLink.classList.add('nav-auth-link');
-            authLink.addEventListener('click', event => {
-                if (!token) {
-                    event.preventDefault();
-                    openAuthModal('login');
-                }
-            });
+            if (!authLink.dataset.authBound) {
+                authLink.dataset.authBound = '1';
+                authLink.addEventListener('click', event => {
+                    if (!getAuthState().token) {
+                        event.preventDefault();
+                        openAuthModal('login');
+                    }
+                });
+            }
 
             if (token) {
                 const name = user?.displayName || email.split('@')[0] || '个人';
@@ -132,6 +166,8 @@ export function initNavAuth() {
         });
 
     document.querySelectorAll('[data-auth-action="open"]').forEach(button => {
+        if (button.dataset.authBound) return;
+        button.dataset.authBound = '1';
         button.addEventListener('click', event => {
             event.preventDefault();
             openAuthModal('login');
@@ -270,9 +306,10 @@ async function handlePasswordLogin(event) {
             }
         });
         saveAuthSession(data);
-        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
         closeAuthModal();
         initNavAuth();
+        refreshCurrentUser().catch(error => console.warn('Profile refresh failed:', error));
+        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
     } catch (error) {
         showAuthMessage(error.message);
     } finally {
@@ -316,9 +353,10 @@ async function handleRegister(event) {
             }
         });
         saveAuthSession(data);
-        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
         closeAuthModal();
         initNavAuth();
+        refreshCurrentUser().catch(error => console.warn('Profile refresh failed:', error));
+        syncLocalStore(loadStore()).catch(error => console.warn('Initial sync failed:', error));
     } catch (error) {
         showAuthMessage(error.message);
     } finally {
@@ -373,6 +411,30 @@ function updatePrettyLinks() {
     });
 }
 
+function dispatchAuthChanged(reason) {
+    window.dispatchEvent(new CustomEvent('auth:changed', { detail: { reason } }));
+}
+
+function refreshUserIfStale() {
+    const { token } = getAuthState();
+    if (!token) return;
+    if (Date.now() - lastProfileRefreshAt < PROFILE_REFRESH_MIN_MS) return;
+    refreshCurrentUser().catch(error => console.warn('Profile refresh failed:', error));
+}
+
+function trackPageView() {
+    const path = `${window.location.pathname}${window.location.search}`;
+    apiRequest('/events/visit', {
+        method: 'POST',
+        body: {
+            path,
+            title: document.title,
+            referrer: document.referrer || ''
+        },
+        timeoutMs: 5000
+    }).catch(() => {});
+}
+
 function maybePromptFirstVisit() {
     const { token, guest } = getAuthState();
     if (token || guest || sessionStorage.getItem(PROMPT_SEEN_KEY)) return;
@@ -400,8 +462,14 @@ function escapeHtml(value) {
 function bootShell() {
     initNavAuth();
     ensureAuthModal();
+    refreshUserIfStale();
+    trackPageView();
     maybePromptFirstVisit();
     window.addEventListener('auth:changed', initNavAuth);
+    window.addEventListener('focus', refreshUserIfStale);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') refreshUserIfStale();
+    });
 }
 
 if (document.readyState === 'loading') {

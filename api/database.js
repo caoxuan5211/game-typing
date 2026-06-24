@@ -72,6 +72,21 @@ function init() {
         )
     `);
 
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS site_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            event_type TEXT NOT NULL,
+            path TEXT,
+            title TEXT,
+            referrer TEXT,
+            ip TEXT,
+            user_agent TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
     console.log('✅ Database initialized');
 }
 

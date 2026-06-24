@@ -146,11 +146,10 @@ body {
     display: inline-grid;
     place-items: center;
     border-radius: 8px;
-    background: var(--color-primary);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 900;
-    letter-spacing: 0;
+    background: url('/assets/brand-icon.svg?v=20260624-4') center / cover no-repeat;
+    color: transparent;
+    font-size: 0;
+    overflow: hidden;
 }
 
 .nav-links {
@@ -368,9 +367,10 @@ body {
     display: grid;
     place-items: center;
     border-radius: var(--radius-md);
-    background: var(--color-primary);
-    color: white;
-    font-weight: 900;
+    background: url('/assets/brand-icon.svg?v=20260624-4') center / cover no-repeat;
+    color: transparent;
+    font-size: 0;
+    overflow: hidden;
 }
 
 .auth-modal-brand h2 {

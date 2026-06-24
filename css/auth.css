@@ -31,10 +31,10 @@
     place-items: center;
     margin: 0 auto calc(var(--spacing-unit) * 2);
     border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: white;
-    font-size: 1.25rem;
-    font-weight: 900;
+    background: url('/assets/brand-icon.svg?v=20260624-4') center / cover no-repeat;
+    color: transparent;
+    font-size: 0;
+    overflow: hidden;
 }
 
 .auth-title {
@@ -208,10 +208,6 @@
 
     .auth-container {
         padding: calc(var(--spacing-unit) * 4);
-    }
-
-    .auth-logo {
-        font-size: 3rem;
     }
 
     .auth-title {

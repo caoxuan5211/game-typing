@@ -1,9 +1,10 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore } from './shell.js?v=20260624-3';
+import { apiRequest, clearAuthSession, getAuthState, initNavAuth, openAuthModal, syncLocalStore, updateStoredUser } from './shell.js?v=20260624-4';
 
 let store = loadStore();
 let avatarData = '';
+let profileLoading = false;
 
 const dom = {
     accountPill: document.getElementById('accountPill'),
@@ -36,6 +37,7 @@ const dom = {
 function init() {
     bindEvents();
     render();
+    refreshProfileFromServer();
 }
 
 function bindEvents() {
@@ -79,6 +81,16 @@ function bindEvents() {
     dom.exportBtn.addEventListener('click', exportData);
     dom.importInput.addEventListener('change', importData);
     dom.clearBtn.addEventListener('click', clearLocalData);
+    window.addEventListener('auth:changed', () => {
+        const { token } = getAuthState();
+        if (!token) {
+            avatarData = '';
+            render();
+            return;
+        }
+        refreshProfileFromServer();
+    });
+    window.addEventListener('focus', refreshProfileFromServer);
 }
 
 function updateNumber(key, min, max) {
@@ -103,7 +115,7 @@ function render() {
     audioSystem.setEnabled(store.sound);
 
     const name = user?.displayName || email.split('@')[0] || (guest ? '游客' : '本地用户');
-    avatarData = user?.avatar || avatarData || '';
+    avatarData = token ? (user?.avatar || '') : '';
 
     dom.accountPill.textContent = token ? '已登录' : (guest ? '游客模式' : '本地模式');
     dom.accountName.textContent = name;
@@ -132,9 +144,27 @@ function render() {
 }
 
 function logout() {
+    avatarData = '';
     clearAuthSession();
     render();
     showToast('已退出登录，本地数据仍保留');
+}
+
+async function refreshProfileFromServer() {
+    const { token } = getAuthState();
+    if (!token || profileLoading) return;
+
+    profileLoading = true;
+    try {
+        const data = await apiRequest('/user/profile', { timeoutMs: 8000 });
+        updateStoredUser(data.user);
+        avatarData = data.user.avatar || '';
+        render();
+    } catch (error) {
+        showToast(error.message || '资料刷新失败');
+    } finally {
+        profileLoading = false;
+    }
 }
 
 async function handleAvatarFile(event) {
@@ -175,8 +205,8 @@ async function saveProfile() {
             method: 'PATCH',
             body: { displayName, avatar: avatarData }
         });
-        localStorage.setItem('user_profile', JSON.stringify(data.user));
-        initNavAuth();
+        updateStoredUser(data.user);
+        avatarData = data.user.avatar || '';
         render();
         showToast('资料已保存');
     } catch (error) {
