@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, getDefaultStore } from './storage.js';
-import { getAuthState, initNavAuth, syncLocalStore } from './shell.js';
+import { getAuthState, initNavAuth, syncLocalStore } from './shell.js?v=20260624-2';
 
 let store = loadStore();
 
