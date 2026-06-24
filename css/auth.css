@@ -31,7 +31,7 @@
     place-items: center;
     margin: 0 auto calc(var(--spacing-unit) * 2);
     border-radius: var(--radius-lg);
-    background: url('/assets/brand-icon.svg?v=20260624-6') center / cover no-repeat;
+    background: url('/assets/brand-icon.svg?v=20260624-7') center / cover no-repeat;
     color: transparent;
     font-size: 0;
     overflow: hidden;

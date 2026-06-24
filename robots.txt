@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /debug.html
+Disallow: /test_enter.html
+
+Sitemap: https://type.mineguai.com/sitemap.xml

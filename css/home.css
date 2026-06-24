@@ -268,7 +268,7 @@
     display: inline-grid;
     place-items: center;
     border-radius: 7px;
-    background: url('/assets/brand-icon.svg?v=20260624-6') center / cover no-repeat;
+    background: url('/assets/brand-icon.svg?v=20260624-7') center / cover no-repeat;
     color: transparent;
     font-size: 0;
     overflow: hidden;
@@ -277,6 +277,12 @@
 .footer-desc {
     color: var(--color-text-secondary);
     font-size: 0.875rem;
+}
+
+.footer-meta {
+    margin-top: calc(var(--spacing-unit) * 0.5);
+    color: var(--color-text-tertiary);
+    font-size: 0.8125rem;
 }
 
 .footer-right {
