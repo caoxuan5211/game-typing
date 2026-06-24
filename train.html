@@ -9,7 +9,7 @@
     <title>代码打字训练 - Code Typing Lab | Mineguai</title>
     <link rel="icon" href="/assets/favicon.svg?v=20260624-13" type="image/svg+xml">
     <link rel="stylesheet" href="css/common.css?v=20260624-13">
-    <link rel="stylesheet" href="css/train.css?v=20260624-13">
+    <link rel="stylesheet" href="css/train.css?v=20260625-01">
 </head>
 <body>
     <div class="app">
@@ -170,6 +170,14 @@
                         <span class="code-meta" id="snippetMeta">0 字符</span>
                     </div>
                     <div class="code-actions">
+                        <button class="code-control-btn" id="pauseCodeBtn" type="button" hidden>
+                            <span class="control-symbol">Ⅱ</span>
+                            <span class="control-label">暂停</span>
+                        </button>
+                        <button class="code-control-btn danger" id="stopCodeBtn" type="button" hidden>
+                            <span class="control-symbol">■</span>
+                            <span class="control-label">结束</span>
+                        </button>
                         <button class="icon-btn" id="resetCodeBtn" title="重置">🔄</button>
                     </div>
                 </div>
@@ -226,6 +234,6 @@
     </div>
 
     <script type="module" src="js/shell.js?v=20260624-13"></script>
-    <script type="module" src="js/train.js?v=20260624-13"></script>
+    <script type="module" src="js/train.js?v=20260625-01"></script>
 </body>
 </html>

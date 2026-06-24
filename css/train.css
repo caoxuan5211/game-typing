@@ -339,6 +339,18 @@
     width: 100%;
 }
 
+.btn-danger-soft {
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.btn-danger-soft:hover {
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.46);
+    background: rgba(239, 68, 68, 0.12);
+}
+
 /* 代码显示区 */
 .code-area {
     display: flex;
@@ -351,6 +363,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: calc(var(--spacing-unit) * 2);
     padding: calc(var(--spacing-unit) * 3);
     border-bottom: 1px solid var(--color-border);
     background: var(--color-surface);
@@ -360,12 +373,64 @@
     display: flex;
     flex-direction: column;
     gap: calc(var(--spacing-unit) * 0.5);
+    min-width: 0;
+}
+
+.code-actions {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 1);
+}
+
+.code-control-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing-unit) * 0.75);
+    padding: 0 calc(var(--spacing-unit) * 1.75);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.code-control-btn:hover {
+    background: var(--color-surface-elevated);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.code-control-btn.danger {
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.code-control-btn.danger:hover {
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.46);
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.control-symbol {
+    min-width: 1em;
+    line-height: 1;
+    text-align: center;
 }
 
 .code-title {
     font-size: 1.125rem;
     font-weight: 700;
     color: var(--color-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .code-meta {
@@ -754,6 +819,14 @@
 
     .difficulty-btns {
         flex-direction: column;
+    }
+
+    .code-header {
+        padding: calc(var(--spacing-unit) * 2);
+    }
+
+    .code-control-btn {
+        padding: 0 calc(var(--spacing-unit) * 1.25);
     }
 
     .code-display {

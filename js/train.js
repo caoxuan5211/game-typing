@@ -531,6 +531,8 @@ const dom = {
     startBtn: document.getElementById('startBtn'),
     resetBtn: document.getElementById('resetBtn'),
     resetCodeBtn: document.getElementById('resetCodeBtn'),
+    pauseCodeBtn: document.getElementById('pauseCodeBtn'),
+    stopCodeBtn: document.getElementById('stopCodeBtn'),
     soundToggle: document.getElementById('soundToggle'),
     themeToggle: document.getElementById('themeToggle'),
     customModal: document.getElementById('customModal'),
@@ -593,14 +595,17 @@ function bindEvents() {
 
     // 操作按钮
     dom.startBtn.addEventListener('click', handlePrimaryAction);
-    dom.resetBtn.addEventListener('click', () => {
+    dom.resetBtn.addEventListener('click', handleSecondaryAction);
+    dom.resetCodeBtn.addEventListener('click', () => {
+        if (state.status === 'running' || state.status === 'paused') {
+            cancelRound();
+            return;
+        }
         resetRound(true);
         showToast('已换一题');
     });
-    dom.resetCodeBtn.addEventListener('click', () => {
-        resetRound(true);
-        showToast('已重置');
-    });
+    dom.pauseCodeBtn.addEventListener('click', handlePrimaryAction);
+    dom.stopCodeBtn.addEventListener('click', cancelRound);
 
     // 音效和主题
     dom.soundToggle.addEventListener('click', toggleSound);
@@ -911,6 +916,16 @@ function handlePrimaryAction() {
     startRound();
 }
 
+function handleSecondaryAction() {
+    if (state.status === 'running' || state.status === 'paused') {
+        cancelRound();
+        return;
+    }
+
+    resetRound(true);
+    showToast('已换一题');
+}
+
 function startRound() {
     if (state.mode === 'custom' && !state.customText.trim()) {
         openCustomModal();
@@ -993,8 +1008,19 @@ function resetRound(withNewSnippet = false) {
     dom.hiddenInput.disabled = true;
     dom.hiddenInput.value = '';
 
-    if (withNewSnippet) selectSnippet();
+    if (withNewSnippet) {
+        selectSnippet();
+    } else if (state.mode === 'words' && state.wordQueue.length > 0) {
+        state.target = state.wordQueue[0];
+    }
     renderAll();
+}
+
+function cancelRound() {
+    if (state.status !== 'running' && state.status !== 'paused') return;
+
+    resetRound(false);
+    showToast('已结束本次训练');
 }
 
 function completeRound() {
@@ -1511,6 +1537,20 @@ function renderButtons() {
         <span class="btn-icon">${buttonIcon[state.status]}</span>
     `;
     dom.startBtn.disabled = false;
+
+    const isActiveRound = state.status === 'running' || state.status === 'paused';
+    dom.resetBtn.textContent = isActiveRound ? '结束本次' : '换一题';
+    dom.resetBtn.classList.toggle('btn-danger-soft', isActiveRound);
+
+    dom.pauseCodeBtn.hidden = !isActiveRound;
+    dom.stopCodeBtn.hidden = !isActiveRound;
+    dom.resetCodeBtn.hidden = isActiveRound;
+    dom.pauseCodeBtn.querySelector('.control-symbol').textContent = state.status === 'paused' ? '▶' : 'Ⅱ';
+    dom.pauseCodeBtn.querySelector('.control-label').textContent = state.status === 'paused' ? '继续' : '暂停';
+    dom.pauseCodeBtn.title = state.status === 'paused' ? '继续训练' : '暂停训练';
+    dom.pauseCodeBtn.setAttribute('aria-label', state.status === 'paused' ? '继续训练' : '暂停训练');
+    dom.stopCodeBtn.title = '结束本次训练';
+    dom.stopCodeBtn.setAttribute('aria-label', '结束本次训练');
 }
 
 function escapeHtml(str) {
