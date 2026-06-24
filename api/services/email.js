@@ -13,7 +13,10 @@ const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: emailPort,
     secure: emailPort === 465,
-    auth: authConfig
+    auth: authConfig,
+    tls: {
+        rejectUnauthorized: process.env.EMAIL_HOST !== 'localhost'
+    }
 });
 
 // 验证邮件配置
