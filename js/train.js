@@ -788,9 +788,6 @@ async function fetchResourceText() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = (await response.text()).replace(/\r\n/g, '\n').slice(0, 12000);
         if (!text.trim()) throw new Error('资源内容为空');
-        if (/^\s*<!doctype html/i.test(text) || /^\s*<html[\s>]/i.test(text)) {
-            throw new Error('资源不是可训练的文本文件');
-        }
         dom.customText.value = text;
         showToast('资源已导入，可编辑后保存');
     } catch (error) {
