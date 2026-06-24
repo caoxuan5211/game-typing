@@ -200,7 +200,7 @@
 /* 模式选择 */
 .mode-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: calc(var(--spacing-unit) * 1);
     padding: 4px;
     background: var(--color-surface-elevated);
@@ -233,7 +233,14 @@
     gap: calc(var(--spacing-unit) * 1.5);
 }
 
+.word-bank-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: calc(var(--spacing-unit) * 1.5);
+}
+
 .language-grid.hidden,
+.word-bank-grid.hidden,
 .custom-entry.hidden {
     display: none;
 }
@@ -379,6 +386,20 @@
     white-space: pre-wrap;
     word-wrap: break-word;
     tab-size: var(--typing-tab-size, 4);
+}
+
+.code-display.word-mode {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    font-size: 5rem;
+    line-height: 1.25;
+    text-align: center;
+    word-break: break-word;
+}
+
+.code-display.word-mode .char {
+    border-radius: 8px;
 }
 
 /* 代码提示 */
@@ -678,6 +699,10 @@
         font-size: 1.25rem;
         padding: calc(var(--spacing-unit) * 3);
     }
+
+    .code-display.word-mode {
+        font-size: 4rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -700,6 +725,11 @@
     .code-display {
         font-size: 1.125rem;
         line-height: 1.8;
+    }
+
+    .code-display.word-mode {
+        font-size: 2.75rem;
+        line-height: 1.25;
     }
 }
 

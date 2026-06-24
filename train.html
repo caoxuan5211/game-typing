@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>训练 - Code Typing Lab</title>
-    <link rel="icon" href="/assets/favicon.svg?v=20260624-4" type="image/svg+xml">
-    <link rel="stylesheet" href="css/common.css?v=20260624-4">
-    <link rel="stylesheet" href="css/train.css?v=20260624-4">
+    <link rel="icon" href="/assets/favicon.svg?v=20260624-5" type="image/svg+xml">
+    <link rel="stylesheet" href="css/common.css?v=20260624-5">
+    <link rel="stylesheet" href="css/train.css?v=20260624-5">
 </head>
 <body>
     <div class="app">
@@ -92,8 +92,9 @@
                 <div class="mode-card">
                     <div class="card-title">训练模式</div>
                     <div class="mode-tabs" role="tablist" aria-label="训练模式">
-                        <button class="mode-tab active" data-category="common" type="button">常用</button>
+                        <button class="mode-tab active" data-category="code" type="button">代码</button>
                         <button class="mode-tab" data-category="custom" type="button">自定义</button>
+                        <button class="mode-tab" data-category="words" type="button">单词</button>
                     </div>
                     <div class="language-grid" id="languageGrid">
                         <button class="language-btn active" data-language="javascript" type="button">
@@ -111,6 +112,28 @@
                         <button class="language-btn" data-language="sql" type="button">
                             <span class="language-name">SQL</span>
                             <span class="language-desc">查询 / 条件 / 聚合</span>
+                        </button>
+                    </div>
+                    <div class="word-bank-grid hidden" id="wordBankGrid">
+                        <button class="language-btn active" data-word-bank="cet4" type="button">
+                            <span class="language-name">四级</span>
+                            <span class="language-desc">CET-4 高频基础词</span>
+                        </button>
+                        <button class="language-btn" data-word-bank="cet6" type="button">
+                            <span class="language-name">六级</span>
+                            <span class="language-desc">CET-6 阅读写作词</span>
+                        </button>
+                        <button class="language-btn" data-word-bank="cpp" type="button">
+                            <span class="language-name">CPP</span>
+                            <span class="language-desc">include / namespace / STL</span>
+                        </button>
+                        <button class="language-btn" data-word-bank="javascript" type="button">
+                            <span class="language-name">JS</span>
+                            <span class="language-desc">DOM / async / module</span>
+                        </button>
+                        <button class="language-btn" data-word-bank="sql" type="button">
+                            <span class="language-name">SQL</span>
+                            <span class="language-desc">SELECT / JOIN / GROUP</span>
                         </button>
                     </div>
                     <button class="custom-entry hidden" id="editCustomBtn" type="button">编辑自定义文本</button>
@@ -200,7 +223,7 @@
         </div>
     </div>
 
-    <script type="module" src="js/shell.js?v=20260624-4"></script>
-    <script type="module" src="js/train.js?v=20260624-4"></script>
+    <script type="module" src="js/shell.js?v=20260624-5"></script>
+    <script type="module" src="js/train.js?v=20260624-5"></script>
 </body>
 </html>

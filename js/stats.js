@@ -1,6 +1,6 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore } from './storage.js';
-import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-4';
+import { getAuthState, openAuthModal, route } from './shell.js?v=20260624-5';
 
 let store = loadStore();
 

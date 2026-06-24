@@ -38,7 +38,8 @@ app.use(express.json({ limit: '1mb' }));
 // 限流
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15分钟
-    max: 100 // 每个IP最多100个请求
+    max: 100, // 每个IP最多100个请求
+    skip: req => req.path.startsWith('/api/admin')
 });
 app.use(limiter);
 

@@ -22,6 +22,13 @@ function cleanText(value, maxLength) {
     return String(value || '').trim().slice(0, maxLength);
 }
 
+function getClientIp(req) {
+    return req.headers['cf-connecting-ip']
+        || req.headers['x-real-ip']
+        || String(req.headers['x-forwarded-for'] || '').split(',')[0]
+        || req.ip;
+}
+
 router.post('/visit', (req, res) => {
     try {
         const db = getDb();
@@ -34,7 +41,7 @@ router.post('/visit', (req, res) => {
             cleanText(req.body.path, 240) || '/',
             cleanText(req.body.title, 160),
             cleanText(req.body.referrer, 240),
-            cleanText(req.ip, 80),
+            cleanText(getClientIp(req), 80),
             cleanText(req.headers['user-agent'], 300)
         );
 

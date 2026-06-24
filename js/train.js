@@ -1,7 +1,7 @@
 import { audioSystem } from './audio.js';
 import { loadStore, saveStore, updateDayStreak, normalizeDailyStats, getTodayKey } from './storage.js';
 import { calculateXP, getCurrentLevel, getNextLevelXP, checkNewBadges, BADGES } from './achievements.js';
-import { syncLocalStore } from './shell.js?v=20260624-4';
+import { syncLocalStore } from './shell.js?v=20260624-5';
 
 // 代码片段数据
 const snippets = {
@@ -252,7 +252,62 @@ const languageLabels = {
     cpp: 'CPP',
     html: 'HTML',
     sql: 'SQL',
-    custom: 'Custom'
+    custom: 'Custom',
+    words: 'Words'
+};
+
+const wordBanks = {
+    cet4: {
+        title: '四级核心',
+        desc: '高频基础词',
+        words: [
+            'ability', 'absence', 'accept', 'achieve', 'active', 'address', 'advance', 'advice',
+            'afford', 'against', 'amount', 'appear', 'arrange', 'article', 'attention', 'average',
+            'balance', 'benefit', 'career', 'challenge', 'college', 'compare', 'condition', 'culture',
+            'degree', 'develop', 'economy', 'education', 'environment', 'experience', 'favorite', 'foreign',
+            'general', 'history', 'improve', 'include', 'language', 'material', 'natural', 'opinion',
+            'practice', 'quality', 'reason', 'research', 'science', 'similar', 'society', 'technology'
+        ]
+    },
+    cet6: {
+        title: '六级进阶',
+        desc: '阅读写作词',
+        words: [
+            'abstract', 'academic', 'acquire', 'alternative', 'analyze', 'apparent', 'approach', 'authority',
+            'capacity', 'category', 'commitment', 'component', 'consequence', 'consistent', 'construct', 'contribute',
+            'criterion', 'demonstrate', 'dimension', 'distinct', 'domestic', 'emphasis', 'evaluate', 'evidence',
+            'framework', 'hypothesis', 'identify', 'implement', 'indicate', 'interpret', 'maintain', 'objective',
+            'perspective', 'phenomenon', 'principle', 'priority', 'proportion', 'relevant', 'significant', 'strategy'
+        ]
+    },
+    cpp: {
+        title: 'CPP 常用',
+        desc: '关键字 / STL',
+        words: [
+            'include', 'namespace', 'using', 'define', 'main', 'return', 'class', 'struct',
+            'public', 'private', 'protected', 'template', 'typename', 'vector', 'string', 'unordered_map',
+            'iterator', 'const', 'static', 'inline', 'nullptr', 'override', 'virtual', 'lambda',
+            'begin', 'end', 'push_back', 'emplace_back', 'size_t', 'iostream', 'algorithm', 'memory'
+        ]
+    },
+    javascript: {
+        title: 'JS 常用',
+        desc: '语法 / DOM',
+        words: [
+            'const', 'let', 'function', 'return', 'async', 'await', 'promise', 'callback',
+            'document', 'querySelector', 'addEventListener', 'preventDefault', 'dataset', 'classList', 'localStorage', 'sessionStorage',
+            'fetch', 'response', 'request', 'module', 'export', 'import', 'template', 'literal'
+        ]
+    },
+    sql: {
+        title: 'SQL 常用',
+        desc: '查询关键字',
+        words: [
+            'SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE', 'VALUES', 'JOIN',
+            'LEFT', 'RIGHT', 'INNER', 'GROUP', 'ORDER', 'HAVING', 'COUNT', 'AVG',
+            'PRIMARY', 'FOREIGN', 'INDEX', 'CREATE', 'ALTER', 'TABLE', 'DATABASE', 'TRANSACTION'
+        ]
+    }
 };
 
 const difficulty = {
@@ -264,8 +319,15 @@ const difficulty = {
 // 全局状态
 let store = loadStore();
 const state = {
-    mode: 'common',
+    mode: 'code',
     language: store.preferredLanguage || 'javascript',
+    wordBank: store.preferredWordBank || 'cet4',
+    wordQueue: [],
+    wordIndex: 0,
+    wordTotalChars: 0,
+    wordCompletedChars: 0,
+    wordCompletedTyped: 0,
+    wordCompletedCorrect: 0,
     difficulty: 'medium',
     status: 'idle',
     target: '',
@@ -306,6 +368,7 @@ const dom = {
     themeToggle: document.getElementById('themeToggle'),
     customModal: document.getElementById('customModal'),
     customText: document.getElementById('customText'),
+    wordBankGrid: document.getElementById('wordBankGrid'),
     resourceUrl: document.getElementById('resourceUrl'),
     fetchResourceBtn: document.getElementById('fetchResourceBtn'),
     editCustomBtn: document.getElementById('editCustomBtn'),
@@ -325,6 +388,9 @@ function init() {
     bindEvents();
     document.querySelectorAll('[data-language]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.language === state.language);
+    });
+    document.querySelectorAll('[data-word-bank]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.wordBank === state.wordBank);
     });
     selectSnippet();
     renderAll();
@@ -352,6 +418,10 @@ function bindEvents() {
 
     document.querySelectorAll('[data-language]').forEach(btn => {
         btn.addEventListener('click', () => setLanguage(btn.dataset.language));
+    });
+
+    document.querySelectorAll('[data-word-bank]').forEach(btn => {
+        btn.addEventListener('click', () => setWordBank(btn.dataset.wordBank));
     });
 
     // 难度选择
@@ -409,7 +479,8 @@ function setCategory(mode) {
         btn.classList.toggle('active', btn.dataset.category === mode);
     });
 
-    document.getElementById('languageGrid').classList.toggle('hidden', mode !== 'common');
+    document.getElementById('languageGrid').classList.toggle('hidden', mode !== 'code');
+    dom.wordBankGrid.classList.toggle('hidden', mode !== 'words');
     dom.editCustomBtn.classList.toggle('hidden', mode !== 'custom');
 
     if (mode === 'custom') {
@@ -418,6 +489,25 @@ function setCategory(mode) {
             return;
         }
     }
+
+    resetRound(true);
+}
+
+function setWordBank(wordBank) {
+    if (state.status === 'running') {
+        showToast('训练中暂时不能切换词库');
+        return;
+    }
+
+    if (!wordBanks[wordBank]) return;
+
+    state.wordBank = wordBank;
+    store.preferredWordBank = wordBank;
+    saveStore(store);
+
+    document.querySelectorAll('[data-word-bank]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.wordBank === wordBank);
+    });
 
     resetRound(true);
 }
@@ -544,6 +634,11 @@ function selectSnippet() {
         return;
     }
 
+    if (state.mode === 'words') {
+        prepareWordRound();
+        return;
+    }
+
     const pool = snippets[state.language] || snippets.javascript;
     const limit = difficulty[state.difficulty].max;
     const candidates = pool.filter(item => item.text.length <= limit);
@@ -553,6 +648,28 @@ function selectSnippet() {
     state.target = source[index].text;
     state.title = source[index].title;
     state.snippetLanguage = source[index].language || state.language;
+}
+
+function prepareWordRound() {
+    const bank = wordBanks[state.wordBank] || wordBanks.cet4;
+    state.wordQueue = shuffleWords(bank.words);
+    state.wordIndex = 0;
+    state.wordTotalChars = state.wordQueue.reduce((sum, word) => sum + word.length, 0);
+    state.wordCompletedChars = 0;
+    state.wordCompletedTyped = 0;
+    state.wordCompletedCorrect = 0;
+    state.target = state.wordQueue[0] || '';
+    state.title = bank.title;
+    state.snippetLanguage = 'words';
+}
+
+function shuffleWords(words) {
+    const copy = [...words];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
 }
 
 // 训练控制
@@ -581,6 +698,10 @@ function startRound() {
         return;
     }
 
+    if (state.mode === 'words' && state.wordQueue.length === 0) {
+        prepareWordRound();
+    }
+
     state.status = 'running';
     state.startedAt = Date.now();
     state.pausedAt = 0;
@@ -590,6 +711,13 @@ function startRound() {
     state.bestCombo = 0;
     state.errors = 0;
     state.corrections = 0;
+    if (state.mode === 'words') {
+        state.wordIndex = 0;
+        state.wordCompletedChars = 0;
+        state.wordCompletedTyped = 0;
+        state.wordCompletedCorrect = 0;
+        state.target = state.wordQueue[0] || '';
+    }
 
     dom.hiddenInput.disabled = false;
     dom.hiddenInput.value = '';
@@ -634,6 +762,10 @@ function resetRound(withNewSnippet = false) {
     state.bestCombo = 0;
     state.errors = 0;
     state.corrections = 0;
+    state.wordCompletedChars = 0;
+    state.wordCompletedTyped = 0;
+    state.wordCompletedCorrect = 0;
+    state.wordIndex = 0;
     state.startedAt = 0;
     state.pausedAt = 0;
     state.pausedMs = 0;
@@ -651,6 +783,7 @@ function completeRound() {
     dom.hiddenInput.disabled = true;
 
     const result = getStats();
+    const roundChars = getRoundTargetLength();
     const now = Date.now();
     const previousPlayedDay = store.lastPlayedDay;
 
@@ -663,9 +796,9 @@ function completeRound() {
     store.totalRuns += 1;
     store.bestWpm = Math.max(store.bestWpm, result.wpm);
     store.bestAccuracy = Math.max(store.bestAccuracy, result.accuracy);
-    store.todayChars += state.target.length;
+    store.todayChars += roundChars;
     store.bestCombo = Math.max(store.bestCombo, state.bestCombo);
-    store.maxCharsInSession = Math.max(store.maxCharsInSession, state.target.length);
+    store.maxCharsInSession = Math.max(store.maxCharsInSession, roundChars);
 
     // 记录评分
     if (result.grade === 'S') {
@@ -673,7 +806,7 @@ function completeRound() {
     }
 
     // 记录模式
-    const playedMode = state.mode === 'custom' ? 'custom' : state.snippetLanguage;
+    const playedMode = getPlayedMode();
     if (!store.modesPlayed) store.modesPlayed = [];
     if (!store.modesPlayed.includes(playedMode)) {
         store.modesPlayed.push(playedMode);
@@ -681,7 +814,7 @@ function completeRound() {
     }
 
     // 计算经验值
-    const xpGained = calculateXP(result.wpm, result.accuracy, state.target.length);
+    const xpGained = calculateXP(result.wpm, result.accuracy, roundChars);
     store.totalXP = (store.totalXP || 0) + xpGained;
 
     const newLevel = getCurrentLevel(store.totalXP);
@@ -713,7 +846,7 @@ function completeRound() {
         accuracy: result.accuracy,
         time: result.elapsed,
         mode: playedMode,
-        chars: state.target.length,
+        chars: roundChars,
         grade: result.grade,
         xp: xpGained,
         createdAt: now
@@ -744,11 +877,23 @@ function completeRound() {
     renderAll();
 }
 
+function getPlayedMode() {
+    if (state.mode === 'custom') return 'custom';
+    if (state.mode === 'words') return `words:${state.wordBank}`;
+    return state.snippetLanguage;
+}
+
+function getRoundTargetLength() {
+    if (state.mode === 'words') return state.wordTotalChars || state.target.length;
+    return state.target.length;
+}
+
 // 输入处理
 function handleKeydown(event) {
     if (event.key === 'Enter' && state.status === 'running') {
         event.preventDefault();
         event.stopPropagation();
+        if (state.mode === 'words') return;
         insertSmartNewline();
         return;
     }
@@ -771,7 +916,7 @@ function insertSmartNewline() {
     const start = input.selectionStart;
     const end = input.selectionEnd;
     const value = input.value.replace(/\r\n/g, '\n');
-    const insertText = getSmartNewlineText(value, start);
+    const insertText = getSmartNewlineText(value, state.input.length);
 
     input.value = `${value.slice(0, start)}${insertText}${value.slice(end)}`;
     input.selectionStart = input.selectionEnd = start + insertText.length;
@@ -779,6 +924,9 @@ function insertSmartNewline() {
 }
 
 function getSmartNewlineText(value, cursor) {
+    const targetIndentText = getTargetNewlineIndentText(cursor);
+    if (targetIndentText !== null) return targetIndentText;
+
     const beforeCursor = value.slice(0, cursor);
     const currentLine = beforeCursor.slice(beforeCursor.lastIndexOf('\n') + 1);
     const baseIndent = currentLine.match(/^[\t ]*/)?.[0] || '';
@@ -791,6 +939,16 @@ function getSmartNewlineText(value, cursor) {
     }
 
     return `\n${baseIndent}${shouldIndentBlock ? indentUnit : ''}`;
+}
+
+function getTargetNewlineIndentText(cursor) {
+    if (state.target[cursor] !== '\n') return null;
+
+    let index = cursor + 1;
+    while (index < state.target.length && /[\t ]/.test(state.target[index])) {
+        index += 1;
+    }
+    return state.target.slice(cursor, index);
 }
 
 function getTargetNextLineIndent(cursor) {
@@ -809,7 +967,12 @@ function getIndentUnit(indentSample) {
 function handleInput(event) {
     if (state.status !== 'running') return;
 
-    const next = event.target.value.replace(/\r\n/g, '\n');
+    let next = event.target.value.replace(/\r\n/g, '\n');
+    const shouldCompleteCurrent = next.length >= state.target.length;
+    if (shouldCompleteCurrent) {
+        next = next.slice(0, state.target.length);
+        event.target.value = next;
+    }
     const previousLength = state.input.length;
     state.input = next;
 
@@ -843,11 +1006,39 @@ function handleInput(event) {
         }
     }
 
-    if (state.input === state.target) {
+    if (state.mode === 'words' && shouldCompleteCurrent) {
+        advanceWordOrComplete();
+    } else if (state.mode !== 'words' && shouldCompleteCurrent) {
         completeRound();
     } else {
         renderAll();
     }
+}
+
+function advanceWordOrComplete() {
+    state.wordCompletedChars += state.target.length;
+    state.wordCompletedTyped += state.input.length;
+    state.wordCompletedCorrect += countCorrectChars(state.input, state.target);
+
+    if (state.wordIndex >= state.wordQueue.length - 1) {
+        completeRound();
+        return;
+    }
+
+    state.wordIndex += 1;
+    state.target = state.wordQueue[state.wordIndex];
+    state.input = '';
+    dom.hiddenInput.value = '';
+    audioSystem.playKeystroke();
+    renderAll();
+}
+
+function countCorrectChars(input, target) {
+    let correct = 0;
+    for (let i = 0; i < input.length; i += 1) {
+        if (input[i] === target[i]) correct += 1;
+    }
+    return correct;
 }
 
 function handleGlobalKey(event) {
@@ -877,19 +1068,29 @@ function getStats() {
     const elapsedMs = getElapsedMs();
     const elapsed = Math.max(0, Math.round(elapsedMs / 1000));
     const minutes = Math.max(elapsedMs / 60000, 1 / 60000);
-    const inputLength = state.input.length;
+    const inputLength = getInputProgressLength();
+    const targetLength = getRoundTargetLength();
+    const currentCorrect = countCorrectChars(state.input, state.target);
+    const correct = state.mode === 'words'
+        ? state.wordCompletedCorrect + currentCorrect
+        : currentCorrect;
+    const typedLength = state.mode === 'words'
+        ? state.wordCompletedTyped + state.input.length
+        : inputLength;
 
-    let correct = 0;
-    for (let i = 0; i < inputLength; i += 1) {
-        if (state.input[i] === state.target[i]) correct += 1;
-    }
-
-    const accuracy = inputLength === 0 ? 100 : Math.max(0, Math.round((correct / inputLength) * 100));
+    const accuracy = typedLength === 0 ? 100 : Math.max(0, Math.round((correct / typedLength) * 100));
     const wpm = Math.round((correct / 5) / minutes);
-    const progress = Math.min(100, Math.round((Math.min(inputLength, state.target.length) / state.target.length) * 100));
+    const progress = targetLength === 0 ? 0 : Math.min(100, Math.round((Math.min(inputLength, targetLength) / targetLength) * 100));
     const grade = getGrade(wpm, accuracy, progress);
 
     return { elapsed, accuracy, wpm, progress, grade, correct };
+}
+
+function getInputProgressLength() {
+    if (state.mode === 'words') {
+        return state.wordCompletedChars + Math.min(state.input.length, state.target.length);
+    }
+    return Math.min(state.input.length, state.target.length);
 }
 
 function getElapsedMs() {
@@ -980,6 +1181,8 @@ function renderProgress(stats) {
 }
 
 function renderCode() {
+    dom.codeDisplay.classList.toggle('word-mode', state.mode === 'words');
+
     if (!state.target) {
         dom.codeDisplay.innerHTML = `
             <div class="code-hint">
@@ -1029,6 +1232,11 @@ function renderCode() {
 
 function renderMeta() {
     dom.snippetTitle.textContent = state.title || '选择模式开始';
+    if (state.mode === 'words') {
+        const bank = wordBanks[state.wordBank] || wordBanks.cet4;
+        dom.snippetMeta.textContent = `${bank.title} · ${state.wordIndex + 1}/${state.wordQueue.length || bank.words.length} 词`;
+        return;
+    }
     const language = languageLabels[state.snippetLanguage] || languageLabels[state.language] || 'Code';
     dom.snippetMeta.textContent = `${language} · ${state.target.length} 字符`;
 }
